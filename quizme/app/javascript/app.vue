@@ -1,22 +1,24 @@
 <template>
   <div id="app">
-    <p>{{ message }}</p>
-    <v-btn
-  elevation="2"
-> Click Me
-</v-btn>
+    <v-app>
+    <guess-subject>
+    </guess-subject>
+    </v-app>
   </div>
 </template>
-
+  
 <script> 
+import guessSubject from './packs/components/guess-subject.vue';
 
 export default {
+  components: { guessSubject },
   data: function () {
     return {
       message: "Hello Vue!"
     }
   }
 }
+
 </script>
 
 <style scoped>

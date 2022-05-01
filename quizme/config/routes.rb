@@ -2,5 +2,10 @@ Rails.application.routes.draw do
   root to: 'welcome#index'
   resources :app
   get 'app', to: 'app#index'
-  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+
+  namespace 'guess_subject' do
+    resources :games, only: [:index, :show, :create]
+    post 'games/:id/next_question', to: 'games#next_question'
+    post 'games/:id/process_answer', to: 'games#process_answer'
+  end
 end
