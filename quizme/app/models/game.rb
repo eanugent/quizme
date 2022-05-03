@@ -46,8 +46,6 @@ class Game < ApplicationRecord
         if(input == "q")
             puts "Sorry to see you go"
         end
-
-        #ActiveRecord::Base.logger = old_logger
     end
 
     def process_answer(question_id, answer_val)
@@ -93,13 +91,10 @@ class Game < ApplicationRecord
                     h[k][index2] = v[3]
                     h[k][index3] = v[5]
                 end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-                sort_by{ |k,v| v }
+                sort_by{ |k,v| v }.
+                take(5)
 
-        if potential_next.count > 3
-            potential_next[rand(0..2)][0]
-        else            
-            potential_next[0][0]
-        end
+        potential_next[rand(0..potential_next.count-1)][0]
     end
 
     def questions_query

@@ -18,15 +18,23 @@ module GuessSubject
                 data:
                 {
                     game_id: @game.id,
-                    next_question: next_question
+                    next_question: next_question,
+                    game_status: 'in_progress'
                 },
-                status: :ok, 
-                message: 'Success'
+                status: :ok
             }
         end
 
         def index
-            render json: { data: recent_games, status: :ok, message: 'Success' }
+            render json: { data: recent_games, status: :ok }
+        end
+
+        def characters
+            render json:
+            { 
+                data: Subject.where(game_type: game_type_param).to_a.sort_by{|s| s.name},
+                status: :ok
+            }
         end
 
         def process_answer
@@ -36,15 +44,15 @@ module GuessSubject
             if next_question.nil? || game.remaining_subject_ids.count == 0
                 render json:
                 {
-                    data: {},
+                    data: { game_status: "complete" },
                     status: :ok,
                     message:
-                        "Sorry, I failed to figure it out! I couldn't decide between #{names_before_processing}"
+                        "Ugh, this is embarrassing ... I couldn't decide between these characters: #{names_before_processing}"
                 }
             elsif game.remaining_subject_ids.count == 1
                 render json:
                 {
-                    data: {},
+                    data: { game_status: "complete" },
                     status: :ok,
                     message: "Your person is #{game.remaining_subject_names[0]}!"
                 }
@@ -53,6 +61,7 @@ module GuessSubject
                 {
                     data:
                     {
+                        game_status: "in_progress",
                         next_question: next_question
                     },
                     status: :ok,

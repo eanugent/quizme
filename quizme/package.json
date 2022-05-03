@@ -9,13 +9,13 @@
     "axios": "^0.26.1",
     "turbolinks": "^5.2.0",
     "vue": "2.6",
-    "vuetify": "^2.6.4"
+    "vuetify": "^2.6.4",
+    "webpack": "^4.46.0"
   },
   "version": "0.1.0",
   "devDependencies": {
     "deepmerge": "^4.2.2",
     "sass": "~1.32",
-    "sass-loader": "^12.6.0",
     "vue-loader": "^15.8.3",
     "vue-template-compiler": "^2.6.14",
     "webpack-dev-server": "^3"

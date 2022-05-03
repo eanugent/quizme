@@ -1,26 +1,65 @@
 <template>
   <div>
-    <h3>
-        Guess Subjects
-    </h3>
-    <div>
-      {{ questionText }}
-    </div>
-    <div>
-      <v-container>
-        <v-radio-group v-model="answerVal">
-        <v-radio
-          v-for="(answer, index) in answerVals"
-          :key="index+1"
-          :label="answer"
-          :value="index+1"
-        ></v-radio>
-        </v-radio-group>
-      </v-container>
-    </div>
-    <div>
-      {{ message }}
-    </div>
+    <v-layout>
+    <v-flex xs12 sm6 offset-sm3>
+      <v-card class="mb-6">
+        <v-card-title>
+          Can I read your mind?
+        </v-card-title>
+      </v-card>
+
+      <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6">
+        <v-card-title>
+          Choose a character from the list below
+        </v-card-title>
+        <v-card-text>
+          <ul class="mb-6">
+            <li
+              v-for="character in characters"
+              :key="character.name"
+              >
+              {{ character.name }}
+            </li>
+          </ul>
+          <v-btn @click="startGame()">
+            Read to Go!
+          </v-btn>
+        </v-card-text>
+      </v-card>
+       
+      <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6">
+        <v-card-title primary-title>
+          {{ question ? `${question.question}?` : ''}}
+        </v-card-title>
+        <v-card-actions>
+          <v-radio-group v-model="answerVal">
+          <v-radio
+            v-for="(answer, index) in answerVals"
+            :key="index+1"
+            :label="answer"
+            :value="index+1"
+            @click="processAnswer()"
+          ></v-radio>
+          </v-radio-group>
+        </v-card-actions>        
+      </v-card>
+
+      <v-card v-if="this.message" class="mb-6">
+        <v-card-title>
+          {{ message }}
+        </v-card-title>
+      </v-card>
+
+      <div>
+        <v-btn
+          v-if="this.gameStatus == 'complete'"
+          @click="restart()"
+        >
+          Play Again!
+        </v-btn>
+      </div>
+    </v-flex>
+    </v-layout>
   </div>
 </template>
 
@@ -31,105 +70,56 @@ import question from "./question.vue";
 export default {
   components: { question },
   data: () => ({
-    gameStatus: 'uninitialized',
+    gameStatus: 'choosing_character',
+    gameId: -1,
     answerVals: ['Yes', 'No', 'Not Sure'],
     answerVal: '',
     message: '',
-    questionText: ''
+    question: {},
+    characters: []
   }),
-  computed: {
-    formTitle() {
-      return this.editedIndex === -1 ? "New Item" : "Edit Item";
-    }
-  },
-  created() {
-    this.initialize();
+  created: function () {
+    axios
+      .get("/guess_subject/characters?game_type=Bible Characters")
+      .then(response => {
+        this.characters = response.data.data;
+      })
   },
   methods: {
-    initialize() {
-      return axios
-        .get("/users")
+    startGame() {
+      axios
+        .post("/guess_subject/games", 
+        {
+          game_type: "Bible Characters"
+        })
         .then(response => {
-          console.log(response.data);
-          this.desserts = response.data;
+          const data = response.data.data;
+          this.gameId = data.game_id;
+          this.message = response.data.message;
+          this.question = data.next_question;
+          this.gameStatus = data.game_status;          
         })
         .catch(e => {
           console.log(e);
         });
     },
-    editItem(item) {
-      this.editedIndex = item.id;
-      this.editedItem = Object.assign({}, item);
-      this.dialog = true;
-    },
-    deleteItem(item) {
-      const index = this.desserts.indexOf(item);
-      confirm("Are you sure you want to delete this item?");
+    processAnswer() {
       axios
-        .delete(`http://localhost:3000/users/${item.id}`)
-        .then(response => {
-          console.log(response);
-          console.log(response.data.json);
-          alert(response.data.json);
-          this.initialize();
-        })
-        .catch(error => {
-          console.log(error);
+        .post(`/guess_subject/games/${this.gameId}/process_answer`,
+        {
+          question_id: this.question.id,
+          answer_val: this.answerVal
+        }).then(response => {
+          const data = response.data.data;
+          console.log(data);
+          this.message = response.data.message;
+          this.question = data.next_question;
+          this.gameStatus = data.game_status;
         });
-      this.desserts.splice(index, 1);
     },
-    close() {
-      this.dialog = false;
-      setTimeout(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      }, 300);
-    },
-    save(item) {
-      if (this.editedIndex > -1) {
-        axios
-          .put(`http://localhost:3000/users/${item.id}`, {
-            id: this.editedItem.id,
-            first_name: this.editedItem.first_name,
-            last_name: this.editedItem.last_name,
-            email: this.editedItem.email,
-            phone: this.editedItem.phone,
-            address: this.editedItem.address
-          })
-          .then(response => {
-            console.log(response);
-            this.initialize();
-          })
-          .catch(error => {
-            console.log(error);
-          });
-      } else {
-        console.log(item);
-        axios
-          .post(`http://localhost:3000/users/`, {
-            user: this.editedItem
-          })
-          .then(response => {
-            console.log(response);
-            console.log("Created!");
-            this.initialize();
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        this.desserts.push(this.editedItem);
-      }
-      this.close();
-    },
-    getUser(item) {
-      axios
-        .get(`http://localhost:3000/${item.id}`)
-        .then(response => {
-          this.dessert = response.data;
-        })
-        .catch(error => {
-          console.log(error);
-        });
+    restart() {
+      this.message = '';
+      this.gameStatus = 'choosing_character';
     }
   }
 };
