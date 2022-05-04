@@ -22,7 +22,7 @@
             </li>
           </ul>
           <v-btn @click="startGame()">
-            Read to Go!
+            Ready to Go!
           </v-btn>
         </v-card-text>
       </v-card>
