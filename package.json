@@ -7,7 +7,6 @@
     "@rails/ujs": "^6.0.0",
     "@rails/webpacker": "5.4.3",
     "axios": "^0.26.1",
-    "css-loader": "^6.7.1",
     "turbolinks": "^5.2.0",
     "vue": "^2.6.11",
     "vue-loader": "^15.8.3",
@@ -16,6 +15,6 @@
   },
   "version": "0.1.0",
   "devDependencies": {
-    "webpack-dev-server": "^3"
+    "webpack-dev-server": "^3.10.1"
   }
 }
