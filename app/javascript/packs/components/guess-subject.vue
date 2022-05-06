@@ -2,29 +2,29 @@
   <div>
     <v-layout>
     <v-flex xs12 sm6 offset-sm3>
-      <v-card class="my-6">
+      <v-card class="my-6 pa-3">
         <v-card-title>
           Can I read your mind?
         </v-card-title>
       </v-card>
 
-      <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6">
+      <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6 pa-3">
         <v-card-title>
           Choose a character from the list below
         </v-card-title>
         <v-card-text>
-          <ul class="mb-6">
-            <li
+            <div
               v-for="character in characters"
               :key="character.name"
               >
               {{ character.name }}
-            </li>
-          </ul>
+            </div>          
+        </v-card-text>
+        <v-card-actions>
           <v-btn @click="startGame()">
             Ready to Go!
           </v-btn>
-        </v-card-text>
+        </v-card-actions>
       </v-card>
        
       <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
@@ -32,17 +32,6 @@
           {{ question ? `${question.question}?` : ''}}
         </v-card-title>
         <v-card-actions>
-          <!-- <v-container fluid px-0>
-            <v-radio-group v-model="answerVal">
-              <v-radio
-                v-for="(answer, index) in answerVals"
-                :key="index+1"
-                :label="answer"
-                :value="index+1"
-                @click="processAnswer()"
-              ></v-radio>
-            </v-radio-group>
-          </v-container> -->
           <v-btn flat color="orange" @click="processAnswer(1)">Yes</v-btn>
           <v-btn flat color="orange" @click="processAnswer(2)">No</v-btn>
           <v-btn flat color="orange" @click="processAnswer(3)">Not Sure</v-btn>
@@ -55,6 +44,17 @@
         </v-card-title>
       </v-card>
 
+      <v-card v-if="this.askedQuestions.length > 0" class="mb-6">
+        <v-card-text>
+          <div
+            v-for="(question, index) in this.askedQuestions"
+            :key="question.id"
+            :class="`${question.color}--text`"
+          >
+            {{ `${index+1} ${question.text}?` }}
+          </div>
+        </v-card-text>
+      </v-card>
       <div>
         <v-btn
           v-if="this.gameStatus == 'complete'"
@@ -70,18 +70,16 @@
 
 <script>
 import axios from "axios";
-import question from "./question.vue";
 
 export default {
-  components: { question },
   data: () => ({
     gameStatus: 'choosing_character',
     gameId: -1,
-    answerVals: ['Yes', 'No', 'Not Sure'],
-    answerVal: '',
+    answerValColors: ['green', 'red', 'amber'],
     message: '',
     question: {},
-    characters: []
+    characters: [],
+    askedQuestions: []
   }),
   created: function () {
     axios
@@ -109,6 +107,15 @@ export default {
         });
     },
     processAnswer(val) {
+      const questionLog =
+        {
+          text: this.question.question,
+          id: this.question.id,
+          color: this.answerValColors[val-1]
+        };
+      console.log(questionLog);
+      this.askedQuestions.push(questionLog);
+
       axios
         .post(`/guess_subject/games/${this.gameId}/process_answer`,
         {
@@ -125,6 +132,7 @@ export default {
     restart() {
       this.message = '';
       this.gameStatus = 'choosing_character';
+      this.askedQuestions = [];
     }
   }
 };
