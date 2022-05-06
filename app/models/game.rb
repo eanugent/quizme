@@ -104,13 +104,13 @@ class Game < ApplicationRecord
                     h[k][index1] = v[1]
                     h[k][index2] = v[3]
                     h[k][index3] = v[5]
-                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }
-                # sort_by{ |k,v| v }.
-                # take(5)
+                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
+                sort_by{ |k,v| v }.
+                take(5)
 
-        lowest_score = potential_next.min_by{|k,v| v}[1]
-        potential_next.select{|k,v| v == lowest_score}.keys.sample
-        #potential_next[rand(0..potential_next.count-1)][0]
+        # lowest_score = potential_next.min_by{|k,v| v}[1]
+        # potential_next.select{|k,v| v == lowest_score}.keys.sample
+        potential_next[rand(0..potential_next.count-1)][0]
     end
 
     def questions_query
