@@ -19,7 +19,7 @@ module GuessSubject
                 {
                     game_id: @game.id,
                     next_question: next_question,
-                    game_status: 'in_progress'
+                    game_status: @game.status
                 },
                 status: :ok
             }
@@ -38,30 +38,26 @@ module GuessSubject
         end
 
         def process_answer
-            names_before_processing = game.remaining_subject_names.join(", ")
-            game.process_answer(question_id_param.to_i, answer_val_param.to_i)
+            game.process_answer(question_id_param, answer_val_param)
 
-            if next_question.nil? || game.remaining_subject_ids.count == 0
+            if game.status == "complete"
+                message = game.remaining_subject_ids.count > 1 ?
+                "Ugh, this is embarrassing ... I couldn't decide between these characters: #{game.remaining_subject_names}" :
+                "Your person is #{game.remaining_subject_names}!"
+
                 render json:
                 {
-                    data: { game_status: "complete" },
+                    data: { game_status: game.status },
                     status: :ok,
-                    message:
-                        "Ugh, this is embarrassing ... I couldn't decide between these characters: #{names_before_processing}"
+                    message: message                        
                 }
-            elsif game.remaining_subject_ids.count == 1
-                render json:
-                {
-                    data: { game_status: "complete" },
-                    status: :ok,
-                    message: "Your person is #{game.remaining_subject_names[0]}!"
-                }
-            elsif game.remaining_subject_ids.count > 1
+
+            else
                 render json:
                 {
                     data:
                     {
-                        game_status: "in_progress",
+                        game_status: game.status,
                         next_question: next_question
                     },
                     status: :ok,
@@ -81,11 +77,11 @@ module GuessSubject
         end
 
         def question_id_param
-            params.require(:question_id)
+            params.require(:question_id).to_i
         end
 
         def answer_val_param
-            params.require(:answer_val)
+            params.require(:answer_val).to_i
         end
 
         def game
@@ -93,7 +89,7 @@ module GuessSubject
         end
 
         def next_question
-            @next_question ||= Question.find(@game.next_question_id)
+            @next_question ||= Question.find(game.next_question_id)
         end
 
         def recent_games

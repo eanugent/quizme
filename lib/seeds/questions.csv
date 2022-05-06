@@ -1,4 +1,4 @@
-Id,Game Type,Question,Kahoot?,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Peter,_David,_Abner,_Sarah,_Joseph the Dreamer,_Seth,_Samson,_Gideon,_Mary ,_Joshua,_Xerxes,_Pharaoh (moses)
+Id,Game Type,Question,Kahoot?,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Peter,_David,_Abner,_Sarah,_Joseph the Dreamer,_Seth,_Samson,_Gideon,_Mary the Mother of Jesus,_Joshua,_Xerxes,_Pharaoh (moses)
 1,Bible Characters,Is this person a female,1,2,1,2,2,2,2,2,2,2,1,2,2,2,2,1,2,2,2
 2,Bible Characters,Did this person live only in the new testament,1,2,2,1,2,2,1,1,2,2,2,2,2,2,2,1,2,2,2
 3,Bible Characters,Did this person kill anyone,1,1,2,3,2,2,2,2,1,1,2,2,2,1,1,2,1,1,1
@@ -10,10 +10,10 @@ Id,Game Type,Question,Kahoot?,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Peter,
 9,Bible Characters,Was this person a slave,1,2,2,1,2,2,2,2,2,2,2,1,2,2,2,2,1,2,2
 10,Bible Characters,Did this person die a voilent death,1,2,2,1,1,1,1,1,2,1,2,2,2,1,2,2,2,1,1
 11,Bible Characters,Was this person married,1,1,1,3,2,2,3,1,1,3,1,1,1,1,1,1,1,1,1
-12,Bible Characters,Did this person have children mentioned in the Bible ,1,1,2,2,2,2,3,2,1,2,1,2,1,2,2,1,2,2,2
+12,Bible Characters,Did this person have children mentioned in the Bible ,1,1,2,2,2,2,3,2,1,2,1,2,1,2,1,1,2,2,2
 13,Bible Characters,Was this person a Pharisee,1,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 14,Bible Characters,Was this person a prophet,1,1,2,2,2,1,2,3,3,2,2,2,2,2,2,2,2,2,2
-15,Bible Characters,Did this person live in Jersuluem,1,2,2,1,1,2,1,1,1,1,2,2,2,1,1,1,2,2,2
+15,Bible Characters,Did this person ever live in Jerusalem,1,2,2,1,1,2,1,1,1,2,2,2,2,2,2,3,2,2,2
 16,Bible Characters,Did this person live in the time of Jesus,1,3,2,2,1,2,1,1,2,2,2,2,2,2,2,1,2,2,2
 17,Bible Characters,Was this person healed by Jesus,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 18,Bible Characters,Was this person a shepard,1,1,2,2,1,2,2,2,1,2,2,2,2,2,2,2,2,2,2
@@ -34,7 +34,7 @@ Id,Game Type,Question,Kahoot?,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Peter,
 33,Bible Characters,Was this person an Egyptian,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1
 34,Bible Characters,Did this person ever go in the temple in Jersulam,1,2,2,1,1,2,1,1,2,2,2,2,2,1,2,1,2,2,2
 35,Bible Characters,Does this person have a prayer recorded in the Bible,1,1,2,2,1,2,2,2,1,2,2,2,2,2,1,1,2,2,2
-36,Bible Characters,"From what’s in the bible, was this person faithful to God at the end of their life",1,1,1,1,1,1,2,1,1,2,1,1,2,1,1,1,1,2,2
+36,Bible Characters,"From what’s in the bible, was this person faithful to God at the end of their life",1,1,1,1,1,1,2,1,1,2,1,1,1,1,1,1,1,2,2
 37,Bible Characters,Does the name of this person reference God,1,2,2,2,1,3,2,2,2,2,2,2,2,2,2,2,1,2,2
 38,Bible Characters,Was this person named by God,1,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2
 39,Bible Characters,Was this person a preist,1,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
@@ -44,7 +44,7 @@ Id,Game Type,Question,Kahoot?,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Peter,
 43,Bible Characters,Was this person a tax collector,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 44,Bible Characters,Did this person have the same name as one of Jesus' brothers,1,2,2,2,2,2,3,2,2,2,2,2,2,2,2,2,2,2,2
 45,Bible Characters,Was this person one of Jesus’ brothers,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-46,Bible Characters,Did this person have a brother that was one of Jesus' 12  disciples,1,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2
+46,Bible Characters,Did this person have a brother that was one of Jesus' 12  disciples,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2
 47,Bible Characters,Was this person one of Jesus' 12 disciples,1,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2
 48,Bible Characters,Did this person travel with Paul,1,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 49,Bible Characters,Did this person see an angel,1,1,2,2,1,2,2,1,1,2,1,2,2,2,1,1,1,2,2

@@ -21,7 +21,7 @@ csv.each do |row|
   subjects.each do |s|
     next if row[s].blank?
 #p "  Subject: #{s}"
-    name = s[1..]
+    name = s[1..].strip
     subject = Subject.find_or_create_by(name: name, game_type: row["Game Type"])
     a = Answer.new(question: q, subject: subject, answer_val: row[s])
     a.save

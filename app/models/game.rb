@@ -51,11 +51,25 @@ class Game < ApplicationRecord
     def process_answer(question_id, answer_val)
         return -1 if self.asked_question_ids.include?(question_id)
         self.asked_question_ids << question_id
+        self.answer_vals << answer_val
 
         unless answer_val == 3
             wrong_answer_val = answer_val == 1 ? 2 : 1
-            ids_to_remove = Answer.where(question_id: question_id, answer_val: wrong_answer_val).pluck(:subject_id)
-            self.remaining_subject_ids = self.remaining_subject_ids.excluding(ids_to_remove)
+            ids_to_remove =
+                Answer.
+                  where(question_id: question_id, answer_val: wrong_answer_val).
+                  pluck(:subject_id).
+                  intersection(self.remaining_subject_ids)
+
+            remaining_count = self.remaining_subject_ids.count - ids_to_remove.count
+
+            if remaining_count <= 1 # Found the subject or failed
+                self.status = "complete"
+            end
+
+            unless remaining_count == 0
+                self.remaining_subject_ids = self.remaining_subject_ids.excluding(ids_to_remove)                
+            end                
         end
 
         save
@@ -66,7 +80,7 @@ class Game < ApplicationRecord
         # Next question is the question with the lowest value of
         # ABS(yes_answer_subjects - no_answer_subjects) + unknown_answer_subjects
         potential_next =
-            Answer.where(question_id: remaining_question_ids).
+            Answer.where(question_id: remaining_question_ids, subject_id: remaining_subject_ids).
                 group(:question_id, :answer_val).
                 count.
                 group_by{|k,v| k[0]}.
@@ -90,11 +104,13 @@ class Game < ApplicationRecord
                     h[k][index1] = v[1]
                     h[k][index2] = v[3]
                     h[k][index3] = v[5]
-                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-                sort_by{ |k,v| v }.
-                take(5)
+                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }
+                # sort_by{ |k,v| v }.
+                # take(5)
 
-        potential_next[rand(0..potential_next.count-1)][0]
+        lowest_score = potential_next.min_by{|k,v| v}[1]
+        potential_next.select{|k,v| v == lowest_score}.keys.sample
+        #potential_next[rand(0..potential_next.count-1)][0]
     end
 
     def questions_query
@@ -111,11 +127,11 @@ class Game < ApplicationRecord
         end
     end
 
-    def remaining_subject_names
+    def remaining_subject_names(delimitter = ", ")
         self.remaining_subject_ids.map do |id|
             Subject.find(id).name
-        end
-    end
+        end.join(delimitter)
+    end    
 end
 
 
