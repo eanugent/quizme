@@ -1,71 +1,71 @@
 <template>
-  <div>
-    <v-layout>
-    <v-flex xs12 sm6 offset-sm3>
-      <v-card class="my-6 pa-3">
-        <v-card-title>
-          Can I read your mind?
-        </v-card-title>
-      </v-card>
+    <v-container>
+      <v-row>
+        <v-col xs="12">
+          <v-card class="my-6 pa-3">
+            <v-card-title>
+              Can I read your mind?
+            </v-card-title>
+          </v-card>
 
-      <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6 pa-3">
-        <v-card-title>
-          Choose a character from the list below
-        </v-card-title>
-        <v-card-text>
-            <div
-              v-for="character in characters"
-              :key="character.name"
+          <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6 pa-3">
+            <v-card-title>
+              Choose a character from the list below
+            </v-card-title>
+            <v-card-text>
+                <div
+                  v-for="character in characters"
+                  :key="character.name"
+                  >
+                  {{ character.name }}
+                </div>          
+            </v-card-text>
+            <v-card-actions>
+              <v-btn @click="startGame()">
+                Ready to Go!
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+          
+          <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
+            <v-card-title primary-title>
+              {{ question ? `${question.question}?` : ''}}
+            </v-card-title>
+            <v-card-actions>
+              <v-btn flat color="orange" @click="processAnswer(1)">Yes</v-btn>
+              <v-btn flat color="orange" @click="processAnswer(2)">No</v-btn>
+              <v-btn flat color="orange" @click="processAnswer(3)">Not Sure</v-btn>
+            </v-card-actions>        
+          </v-card>
+
+          <v-card v-if="this.message" class="mb-6">
+            <v-card-title>
+              {{ message }}
+            </v-card-title>
+          </v-card>
+
+          <v-card v-if="this.askedQuestions.length > 0" class="mb-6">
+            <v-card-text>
+              <div
+                v-for="(question, index) in this.askedQuestions"
+                :key="question.id"
+                :class="`${question.color}--text`"
               >
-              {{ character.name }}
-            </div>          
-        </v-card-text>
-        <v-card-actions>
-          <v-btn @click="startGame()">
-            Ready to Go!
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-       
-      <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
-        <v-card-title primary-title>
-          {{ question ? `${question.question}?` : ''}}
-        </v-card-title>
-        <v-card-actions>
-          <v-btn flat color="orange" @click="processAnswer(1)">Yes</v-btn>
-          <v-btn flat color="orange" @click="processAnswer(2)">No</v-btn>
-          <v-btn flat color="orange" @click="processAnswer(3)">Not Sure</v-btn>
-        </v-card-actions>        
-      </v-card>
-
-      <v-card v-if="this.message" class="mb-6">
-        <v-card-title>
-          {{ message }}
-        </v-card-title>
-      </v-card>
-
-      <v-card v-if="this.askedQuestions.length > 0" class="mb-6">
-        <v-card-text>
-          <div
-            v-for="(question, index) in this.askedQuestions"
-            :key="question.id"
-            :class="`${question.color}--text`"
-          >
-            {{ `${index+1} ${question.text}?` }}
+                {{ `${index+1} ${question.text}?` }}
+              </div>
+            </v-card-text>
+          </v-card>
+          <div>
+            <v-btn
+              v-if="this.gameStatus == 'complete'"
+              @click="restart()"
+            >
+              Play Again!
+            </v-btn>
           </div>
-        </v-card-text>
-      </v-card>
-      <div>
-        <v-btn
-          v-if="this.gameStatus == 'complete'"
-          @click="restart()"
-        >
-          Play Again!
-        </v-btn>
-      </div>
-    </v-flex>
-    </v-layout>
-  </div>
+        </v-col>
+      </v-row>
+    </v-container>
 </template>
 
 <script>

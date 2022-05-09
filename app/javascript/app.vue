@@ -7,8 +7,10 @@
       </v-toolbar-title>
     </v-app-bar>
     <v-main>
-      <guess-subject>
-      </guess-subject>
+      <v-container fluid>
+        <guess-subject>
+        </guess-subject>
+      </v-container>
     </v-main>
   </v-app>
 </template>
