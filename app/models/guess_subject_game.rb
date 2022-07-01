@@ -1,4 +1,4 @@
-class Game < ApplicationRecord
+class GuessSubjectGame < ApplicationRecord
 
     before_create do |game|
         if self.remaining_subject_ids.empty?
@@ -9,7 +9,7 @@ class Game < ApplicationRecord
     def self.run(game_type = "Bible Characters")
         old_logger = ActiveRecord::Base.logger
         ActiveRecord::Base.logger = nil
-        game = Game.new(game_type: game_type)
+        game = GuessSubjectGame.new(game_type: game_type)
         game.save
         input = ""
         #puts "Answer"
@@ -133,8 +133,3 @@ class Game < ApplicationRecord
         end.join(delimitter)
     end    
 end
-
-
-
-    
-    

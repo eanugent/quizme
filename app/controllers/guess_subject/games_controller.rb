@@ -10,7 +10,7 @@ module GuessSubject
         end
 
         def create
-            @game = Game.new(game_type: game_type_param)
+            @game = GuessSubjectGame.new(game_type: game_type_param)
             @game.save
 
             render json:
@@ -85,7 +85,7 @@ module GuessSubject
         end
 
         def game
-            @game ||= Game.find(id_param)
+            @game ||= GuessSubjectGame.find(id_param)
         end
 
         def next_question
@@ -93,7 +93,7 @@ module GuessSubject
         end
 
         def recent_games
-            Game.where('updated_at > ?', RECENT_GAME_MINUTES_AGO.minutes.ago)
+            GuessSubjectGame.where('updated_at > ?', RECENT_GAME_MINUTES_AGO.minutes.ago)
         end
     end
 end
