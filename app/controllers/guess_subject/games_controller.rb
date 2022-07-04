@@ -10,7 +10,7 @@ module GuessSubject
         end
 
         def create
-            @game = GuessSubjectGame.new(game_type: game_type_param)
+            @game = PickSubjectGame.new(game_type: game_type_param)
             @game.save
 
             render json:
@@ -18,7 +18,7 @@ module GuessSubject
                 data:
                 {
                     game_id: @game.id,
-                    next_question: next_question,
+                    next_question_options: next_question_options,
                     game_status: @game.status
                 },
                 status: :ok
@@ -29,41 +29,20 @@ module GuessSubject
             render json: { data: recent_games, status: :ok }
         end
 
-        def characters
+        def process_question
+            answer_val = game.process_question(question_id_param)
+
             render json:
-            { 
-                data: Subject.where(game_type: game_type_param).to_a.sort_by{|s| s.name},
-                status: :ok
+            {
+                data:
+                {
+                    game_status: game.status,
+                    answer_val: answer_val,
+                    next_question_options: next_question_options
+                },
+                status: :ok,
+                message: nil
             }
-        end
-
-        def process_answer
-            game.process_answer(question_id_param, answer_val_param)
-
-            if game.status == "complete"
-                message = game.remaining_subject_ids.count > 1 ?
-                "Ugh, this is embarrassing ... I couldn't decide between these characters: #{game.remaining_subject_names}" :
-                "Your person is #{game.remaining_subject_names}!"
-
-                render json:
-                {
-                    data: { game_status: game.status },
-                    status: :ok,
-                    message: message                        
-                }
-
-            else
-                render json:
-                {
-                    data:
-                    {
-                        game_status: game.status,
-                        next_question: next_question
-                    },
-                    status: :ok,
-                    message: nil
-                }
-            end
         end
 
         private

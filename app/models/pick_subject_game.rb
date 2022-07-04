@@ -1,8 +1,13 @@
 class PickSubjectGame < ApplicationRecord
+    belongs_to :subject, optional: true
 
     before_create do |game|
         if self.subject_id.nil?
             self.subject_id = Subject.pluck(:id).sample
+        end
+
+        if self.remaining_subject_ids.empty?
+            self.remaining_subject_ids = Subject.where(game_type: game_type).pluck(:id)
         end
     end
 
@@ -12,31 +17,26 @@ class PickSubjectGame < ApplicationRecord
         game = PickSubjectGame.new(game_type: game_type)
         game.save
         input = ""
-        #puts "Answer"
+
         while(!input.downcase.start_with?("q"))
             begin
-                q = Question.find(game.next_question_id)
-                puts "#{q.question}?"
+                game.print_question_options
 
                 input = gets.chomp
 
-                answer_val = {
-                    "y" => 1,
-                    "n" => 2,
-                    "u" => 3
-                }
+                break if input == "q"
 
-                game.process_answer(q.id, answer_val[input.first])
-                #game.print_remaining_subjects
+                puts game.process_question(input.to_i).to_s
+                game.print_remaining_subjects
 
-                if game.remaining_subject_ids.count == 1
-                    puts "Your person is #{Subject.find(game.remaining_subject_ids[0]).name}!"
-                    break
+                # if game.remaining_subject_ids.count == 1
+                #     puts "Your person is #{Subject.find(game.remaining_subject_ids[0]).name}!"
+                #     break
                 
-                elsif game.remaining_subject_ids.count == 0
-                    puts "You got me. Couldn't figure it out. Sorry :("
-                    break
-                end
+                # elsif game.remaining_subject_ids.count == 0
+                #     puts "You got me. Couldn't figure it out. Sorry :("
+                #     break
+                # end
             rescue => exception
                 puts "Error occurred: #{exception.message}"
                 break
@@ -52,40 +52,98 @@ class PickSubjectGame < ApplicationRecord
         return -1 if self.asked_question_ids.include?(question_id)
         self.asked_question_ids << question_id
 
+        answer_val = self.subject.answers.where(question_id: question_id).first&.answer_val
+
+        unless answer_val == 3
+            wrong_answer_val = answer_val == 1 ? 2 : 1
+            ids_to_remove =
+                Answer.
+                  where(question_id: question_id, answer_val: wrong_answer_val).
+                  pluck(:subject_id).
+                  intersection(self.remaining_subject_ids)
+
+            remaining_count = self.remaining_subject_ids.count - ids_to_remove.count
+
+            # if remaining_count <= 1 # Found the subject or failed
+            #     self.status = "complete"
+            # end
+
+            unless remaining_count == 0
+                self.remaining_subject_ids = self.remaining_subject_ids.excluding(ids_to_remove)                
+            end                
+        end
+
         save
-        return 1        
+        @next_question_scores = nil
+        @next_question_options = nil
+        answer_val
     end
 
-    def best_next_question_id
+    def next_question_scores
         # The best next question is the question with the lowest value of
         # ABS(yes_answer_subjects - no_answer_subjects) + unknown_answer_subjects
-        Answer.where(question_id: remaining_question_ids, subject_id: self.subject_id).
-            group(:question_id, :answer_val).
-            count.
-            group_by{|k,v| k[0]}.
-            each_with_object({}) do |(k,v), h|
-                h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
-            end.each_with_object({}) do |(k,v), h|
-                h[k] = {}
-                index1 = v[0]
-                index2 = v[2]
-                index3 = v[4]
+        # This returns all options sorted in ascending order
 
-                if index2 == 0
-                    index2 = (index1 % 3) + 1
-                    if index3 == 0
-                        index3 = (index2 % 3) + 1
+        @next_question_scores ||=
+            Answer.where(question_id: remaining_question_ids, subject_id: self.remaining_subject_ids).
+                group(:question_id, :answer_val).
+                count.
+                group_by{|k,v| k[0]}.
+                each_with_object({}) do |(k,v), h|
+                    h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
+                end.each_with_object({}) do |(k,v), h|
+                    h[k] = {}
+                    index1 = v[0]
+                    index2 = v[2]
+                    index3 = v[4]
+
+                    if index2 == 0
+                        index2 = (index1 % 3) + 1
+                        if index3 == 0
+                            index3 = (index2 % 3) + 1
+                        end
+                    elsif index3 == 0
+                        index3 = [1,2,3].excluding([index1, index2])[0]
                     end
-                elsif index3 == 0
-                    index3 = [1,2,3].excluding([index1, index2])[0]
-                end
 
-                h[k][index1] = v[1]
-                h[k][index2] = v[3]
-                h[k][index3] = v[5]
-            end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-            sort_by{ |k,v| v }.
-            first[0]
+                    h[k][index1] = v[1]
+                    h[k][index2] = v[3]
+                    h[k][index3] = v[5]
+                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
+                sort_by{ |k,v| v }
+    end
+
+    def next_question_options
+        @next_question_options ||=
+            if self.remaining_question_ids.count < 3
+                self.remaining_question_ids.shuffle
+            else
+                scores = next_question_scores
+                threshhold_size = next_question_scores_threshhold_size
+
+                best_cutoff_index = threshhold_size - 1
+                worst_cutoff_index = scores.count - threshhold_size
+
+                best_question_index = rand(0..best_cutoff_index)
+                random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
+                worst_question_index = rand(worst_cutoff_index..scores.count-1)
+                
+                [
+                    scores[best_question_index][0],
+                    scores[random_question_index][0],
+                    scores[worst_question_index][0]
+                ].shuffle
+            end
+    end
+
+    def next_question_scores_threshhold_size
+        score_count = next_question_scores.count
+        size = 6
+        while score_count.to_f / size <= 2
+            size -= 1
+            break if size == 2
+        end
+        size
     end
 
     def questions_query
@@ -102,9 +160,15 @@ class PickSubjectGame < ApplicationRecord
         end
     end
 
+    def print_question_options
+        self.next_question_options.each do |id|
+            puts "#{id} #{Question.find(id).question}"
+        end
+    end
+
     def remaining_subject_names(delimitter = ", ")
         self.remaining_subject_ids.map do |id|
             Subject.find(id).name
         end.join(delimitter)
-    end    
+    end
 end

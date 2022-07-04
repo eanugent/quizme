@@ -32,9 +32,9 @@
               {{ question ? `${question.question}?` : ''}}
             </v-card-title>
             <v-card-actions>
-              <v-btn flat color="orange" @click="processAnswer(1)">Yes</v-btn>
-              <v-btn flat color="orange" @click="processAnswer(2)">No</v-btn>
-              <v-btn flat color="orange" @click="processAnswer(3)">Not Sure</v-btn>
+              <v-btn text color="orange" @click="processAnswer(1)">Yes</v-btn>
+              <v-btn text color="orange" @click="processAnswer(2)">No</v-btn>
+              <v-btn text color="orange" @click="processAnswer(3)">Not Sure</v-btn>
             </v-card-actions>        
           </v-card>
 
@@ -83,7 +83,7 @@ export default {
   }),
   created: function () {
     axios
-      .get("/guess_subject/characters?game_type=Bible Characters")
+      .get("/subjects?game_type=Bible Characters")
       .then(response => {
         this.characters = response.data.data;
       })
