@@ -4,38 +4,61 @@
         <v-col xs="12">
           <v-card class="my-6 pa-3">
             <v-card-title>
-              Can I read your mind?
+              Can you read my mind?
             </v-card-title>
-          </v-card>
 
-          <v-card v-if="this.gameStatus == 'choosing_character'" class="mb-6 pa-3">
-            <v-card-title>
-              Choose a character from the list below
-            </v-card-title>
             <v-card-text>
-                <div
+              I'm thinking of a Bible character in the list below. Choose a question to ask me to figure out who. How many questions will it take you?
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                color="orange lighten-2"
+                text
+                @click="showCharacters = !showCharacters"
+              >
+                Character List
+                <v-icon>{{ showCharacters ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+              </v-btn>
+            </v-card-actions>
+
+            <v-expand-transition>
+              <div v-show="showCharacters">
+                <v-divider></v-divider>
+
+                <v-card-text>
+                  <div
                   v-for="character in characters"
                   :key="character.name"
                   >
                   {{ character.name }}
-                </div>          
-            </v-card-text>
-            <v-card-actions>
-              <v-btn @click="startGame()">
-                Ready to Go!
-              </v-btn>
-            </v-card-actions>
+                </div>   
+                </v-card-text>
+              </div>
+            </v-expand-transition>
           </v-card>
           
           <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
-            <v-card-title primary-title>
-              {{ question ? `${question.question}?` : ''}}
+            <v-card-title
+              v-for="question in this.question_options"
+              :key="question.id"
+            >
+              {{ question.question }}?
+              <v-spacer></v-spacer>
+              <v-btn color="orange" @click="processQuestion(question.id, question.question)">Ask</v-btn>              
             </v-card-title>
+
             <v-card-actions>
-              <v-btn flat color="orange" @click="processAnswer(1)">Yes</v-btn>
-              <v-btn flat color="orange" @click="processAnswer(2)">No</v-btn>
-              <v-btn flat color="orange" @click="processAnswer(3)">Not Sure</v-btn>
-            </v-card-actions>        
+              <v-select
+                v-model="guess"
+                :items="characters"
+                solo
+                item-text="name"
+                item-value="id"
+                label="TAKE A GUESS"
+                return-object
+                @change="processGuess()"
+              ></v-select>
+            </v-card-actions>
           </v-card>
 
           <v-card v-if="this.message" class="mb-6">
@@ -77,15 +100,18 @@ export default {
     gameId: -1,
     answerValColors: ['green', 'red', 'amber'],
     message: '',
-    question: {},
+    question_options: [],
     characters: [],
-    askedQuestions: []
+    showCharacters: false,
+    askedQuestions: [],
+    guess: {}
   }),
   created: function () {
     axios
-      .get("/pick_subject/characters?game_type=Bible Characters")
+      .get("/subjects?game_type=Bible Characters")
       .then(response => {
         this.characters = response.data.data;
+        this.startGame();
       })
   },
   methods: {
@@ -99,40 +125,61 @@ export default {
           const data = response.data.data;
           this.gameId = data.game_id;
           this.message = response.data.message;
-          this.question = data.next_question;
-          this.gameStatus = data.game_status;          
+          this.question_options = data.next_question_options;
+          this.gameStatus = data.game_status;
         })
         .catch(e => {
           console.log(e);
         });
     },
-    processAnswer(val) {
-      const questionLog =
-        {
-          text: this.question.question,
-          id: this.question.id,
-          color: this.answerValColors[val-1]
-        };
-      console.log(questionLog);
-      this.askedQuestions.push(questionLog);
-
+    processQuestion(question_id, question_text) {
       axios
-        .post(`/pick_subject/games/${this.gameId}/process_answer`,
+        .post(`/pick_subject/games/${this.gameId}/process_question`,
         {
-          question_id: this.question.id,
-          answer_val: val
+          question_id: question_id
         }).then(response => {
           const data = response.data.data;
           console.log(data);
           this.message = response.data.message;
-          this.question = data.next_question;
+          this.question_options = data.next_question_options;
           this.gameStatus = data.game_status;
+
+          const questionLog =
+            {
+              text: question_text,
+              id: question_id,
+              color: this.answerValColors[data.answer_val-1]
+            };
+          console.log(questionLog);
+          this.askedQuestions.push(questionLog);
+
+        });
+    },
+    processGuess() {
+      axios
+        .post(`/pick_subject/games/${this.gameId}/process_guess`,
+        {
+          subject_id: this.guess.id
+        }).then(response => {
+          const data = response.data.data;
+          console.log(data);
+          this.message = response.data.message;
+          this.gameStatus = data.game_status;
+
+          const questionLog =
+            {
+              text: `Is it ${this.guess.name}`,
+              id: -1,
+              color: this.answerValColors[data.answer_val-1]
+            };
+          console.log(questionLog);
+          this.askedQuestions.push(questionLog);
         });
     },
     restart() {
       this.message = '';
-      this.gameStatus = 'choosing_character';
       this.askedQuestions = [];
+      this.startGame();
     }
   }
 };

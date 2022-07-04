@@ -26,8 +26,15 @@ class PickSubjectGame < ApplicationRecord
 
                 break if input == "q"
 
-                puts game.process_question(input.to_i).to_s
-                game.print_remaining_subjects
+                answer_val = game.process_question(input.to_i)
+                answer_str = {
+                    1 => "Yes",
+                    2 => "No",
+                    3 => "Not sure"
+                }[answer_val]
+
+                puts answer_str + "\n"
+                #game.print_remaining_subjects
 
                 # if game.remaining_subject_ids.count == 1
                 #     puts "Your person is #{Subject.find(game.remaining_subject_ids[0]).name}!"
@@ -44,7 +51,7 @@ class PickSubjectGame < ApplicationRecord
         end
 
         if(input == "q")
-            puts "Sorry to see you go"
+            puts "Did you guess #{game.subject.name}?"
         end
     end
 
@@ -77,6 +84,19 @@ class PickSubjectGame < ApplicationRecord
         @next_question_scores = nil
         @next_question_options = nil
         answer_val
+    end
+
+    def process_guess(guessed_subject_id)
+        unless self.guessed_subject_ids.include?(guessed_subject_id)
+            self.guessed_subject_ids << guessed_subject_id
+        end
+
+        if guessed_subject_id == self.subject_id
+            self.status = "complete"
+            1
+        else
+            2
+        end
     end
 
     def next_question_scores
@@ -133,6 +153,8 @@ class PickSubjectGame < ApplicationRecord
                     scores[random_question_index][0],
                     scores[worst_question_index][0]
                 ].shuffle
+            end.map do |question_id|
+                Question.find(question_id)
             end
     end
 
@@ -161,8 +183,8 @@ class PickSubjectGame < ApplicationRecord
     end
 
     def print_question_options
-        self.next_question_options.each do |id|
-            puts "#{id} #{Question.find(id).question}"
+        self.next_question_options.each do |question|
+            puts "#{question.id} #{question.question}?"
         end
     end
 

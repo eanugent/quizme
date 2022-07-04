@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_03_233953) do
+ActiveRecord::Schema.define(version: 2022_07_04_183217) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(version: 2022_07_03_233953) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "status", default: "in_progress"
     t.integer "remaining_subject_ids", default: [], array: true
+    t.integer "guessed_subject_ids", default: [], array: true
   end
 
   create_table "questions", force: :cascade do |t|

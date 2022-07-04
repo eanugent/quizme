@@ -1,4 +1,4 @@
-module GuessSubject
+module PickSubject
     class GamesController < ActionController::Base
 
         skip_before_action :verify_authenticity_token
@@ -10,7 +10,7 @@ module GuessSubject
         end
 
         def create
-            @game = GuessSubjectGame.new(game_type: game_type_param)
+            @game = PickSubjectGame.new(game_type: game_type_param)
             @game.save
 
             render json:
@@ -18,7 +18,7 @@ module GuessSubject
                 data:
                 {
                     game_id: @game.id,
-                    next_question: next_question,
+                    next_question_options: next_question_options,
                     game_status: @game.status
                 },
                 status: :ok
@@ -29,41 +29,35 @@ module GuessSubject
             render json: { data: recent_games, status: :ok }
         end
 
-        def characters
+        def process_question
+            answer_val = game.process_question(question_id_param)
+
             render json:
-            { 
-                data: Subject.where(game_type: game_type_param).to_a.sort_by{|s| s.name},
-                status: :ok
+            {
+                data:
+                {
+                    game_status: game.status,
+                    answer_val: answer_val,
+                    next_question_options: next_question_options
+                },
+                status: :ok,
+                message: nil
             }
         end
 
-        def process_answer
-            game.process_answer(question_id_param, answer_val_param)
+        def process_guess
+            answer_val = game.process_guess(subject_id_param)
 
-            if game.status == "complete"
-                message = game.remaining_subject_ids.count > 1 ?
-                "Ugh, this is embarrassing ... I couldn't decide between these characters: #{game.remaining_subject_names}" :
-                "Your person is #{game.remaining_subject_names}!"
-
-                render json:
+            render json:
+            {
+                data:
                 {
-                    data: { game_status: game.status },
-                    status: :ok,
-                    message: message                        
-                }
-
-            else
-                render json:
-                {
-                    data:
-                    {
-                        game_status: game.status,
-                        next_question: next_question
-                    },
-                    status: :ok,
-                    message: nil
-                }
-            end
+                    game_status: game.status,
+                    answer_val: answer_val
+                },
+                status: :ok,
+                message: nil
+            }
         end
 
         private
@@ -80,20 +74,20 @@ module GuessSubject
             params.require(:question_id).to_i
         end
 
-        def answer_val_param
-            params.require(:answer_val).to_i
+        def subject_id_param
+            params.require(:subject_id).to_i
         end
 
         def game
-            @game ||= GuessSubjectGame.find(id_param)
+            @game ||= PickSubjectGame.find(id_param)
         end
 
-        def next_question
-            @next_question ||= Question.find(game.next_question_id)
+        def next_question_options
+            @next_question_options ||= game.next_question_options
         end
 
         def recent_games
-            GuessSubjectGame.where('updated_at > ?', RECENT_GAME_MINUTES_AGO.minutes.ago)
+            PickSubjectGame.where('updated_at > ?', RECENT_GAME_MINUTES_AGO.minutes.ago)
         end
     end
 end
