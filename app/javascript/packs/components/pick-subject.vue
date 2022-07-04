@@ -174,6 +174,7 @@ export default {
             };
           console.log(questionLog);
           this.askedQuestions.push(questionLog);
+          this.guess = {};
         });
     },
     restart() {
