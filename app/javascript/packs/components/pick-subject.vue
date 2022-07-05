@@ -11,10 +11,9 @@
               <p>
                 I'm thinking of a Bible character from the list below.
                 Can you guess who it is in <strong>{{ maxQuestions }} questions or less</strong>?
-                After you click "READY TO GO!" below, I'll give you 3 questions to choose from. Click "ASK" beside the
-                question that will best help you figure out my character. After I answer that question, I'll give you 3 more to 
-                choose from. When you think you've figured me out, go ahead and take a guess. However, guesses count as questions
-                so use them carefully!
+                After you click "READY TO GO!" below, I'll give you 3 questions to choose from. Click "ANSWER" beside the
+                question that will best help you figure out my character. Keep asking questions until you're ready to "TAKE A GUESS".
+                Guesses count as questions so use them carefully!
               </p>
               <h3>
                 Character List
@@ -69,13 +68,19 @@
                 v-for="question in this.question_options"
                 :key="question.id"
               >
-                {{ question.question }}?
+                <span
+                  :class="question.color ? `${question.color}--text` : ''"
+                >
+                  {{ question.question }}?
+                  {{ question.answer }}
+                </span>
                 <v-btn
-                  color="orange"
+                  v-if="!question.answer"
+                  color="orange"                  
                   x-small
                   @click="processQuestion(question.id, question.question)"                
                 >
-                Ask
+                Answer
                 </v-btn>
               </v-card-text>
 
@@ -225,6 +230,7 @@ export default {
     gameStatus: 'intro',
     gameId: -1,
     answerValColors: ['green', 'red', 'amber'],
+    answerValText: ['Yes', 'No', 'Not sure'],
     message: '',
     question_options: [],
     showCharacters: false,
@@ -260,6 +266,8 @@ export default {
         });
     },
     processQuestion(question_id, question_text) {
+      this.question_options = this.question_options.filter((o) => o.id == question_id);
+
       axios
         .post(`/pick_subject/games/${this.gameId}/process_question`,
         {
@@ -268,8 +276,9 @@ export default {
           const data = response.data.data;
           console.log(data);
           this.message = response.data.message;
-          this.question_options = data.next_question_options;
-          this.gameStatus = data.game_status;
+
+          this.question_options[0].color = this.answerValColors[data.answer_val-1];
+          this.question_options[0].answer = this.answerValText[data.answer_val-1];
 
           const questionLog =
             {
@@ -279,6 +288,15 @@ export default {
             };
           console.log(questionLog);
           this.askedQuestions.push(questionLog);
+
+          setTimeout(
+            () =>
+              {
+                this.question_options = data.next_question_options;
+                this.gameStatus = data.game_status;
+              },
+            3000
+            );
         });
     },
     processGuess(subject_id, name) {
