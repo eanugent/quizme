@@ -8,7 +8,7 @@
             </v-card-title>
 
             <v-card-text>
-              I'm thinking of a Bible character in the list below. Choose a question to ask me to figure out who. How many questions will it take you?
+              I'm thinking of a Bible character from the list below. How many questions will it take you to figure out who?
             </v-card-text>
             <v-card-actions>
               <v-btn
@@ -37,55 +37,86 @@
             </v-expand-transition>
           </v-card>
           
-          <v-card  v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
-            <v-card-title
-              v-for="question in this.question_options"
-              :key="question.id"
-            >
-              {{ question.question }}?
-              <v-spacer></v-spacer>
-              <v-btn color="orange" @click="processQuestion(question.id, question.question)">Ask</v-btn>              
-            </v-card-title>
+          <div>
+            <v-card v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
+              <v-card-title>
+                Choose a question.
+              </v-card-title>
+              <v-card-text
+                v-for="question in this.question_options"
+                :key="question.id"
+              >
+                {{ question.question }}?
+                <v-btn
+                  color="orange"
+                  x-small
+                  @click="processQuestion(question.id, question.question)"                
+                >
+                Ask
+                </v-btn>
+              </v-card-text>
+            </v-card>
 
-            <v-card-actions>
-              <v-select
-                v-model="guess"
-                :items="characters"
-                solo
-                item-text="name"
-                item-value="id"
-                label="TAKE A GUESS"
-                return-object
-                @change="processGuess()"
-              ></v-select>
-            </v-card-actions>
-          </v-card>
+            <v-card class="mb-6">
+              <v-card-title>
+                {{ `${askedQuestions.length} Question${askedQuestions.length != 1 ? 's' : ''} asked` }}
+              </v-card-title>
+              <v-card-subtitle>
+                <span class="green--text">
+                  Yes
+                </span> |
+                <span class="red--text">
+                  No
+                </span> |
+                <span class="amber--text">
+                  Not sure
+                </span>
+              </v-card-subtitle>
+              <v-card-text>
+                <div
+                  v-for="question in this.askedQuestions"
+                  :key="question.id"
+                  :class="`${question.color}--text`"
+                >
+                  {{ question.text }}?
+                </div>
+              </v-card-text>
+            </v-card>
 
-          <v-card v-if="this.message" class="mb-6">
+            <v-card v-if="this.gameStatus == 'in_progress'" class="mb-6 pa-5">
+              <v-card-title>
+                Ready to guess?
+              </v-card-title>
+                <v-card-actions>
+                  <v-select
+                    v-model="guess"
+                    :items="characters"
+                    solo
+                    item-text="name"
+                    item-value="id"
+                    label="SELECT CHARACTER"
+                    return-object
+                    @change="processGuess()"
+                    style="max-width: 20rem;"
+                  ></v-select>
+                </v-card-actions>
+            </v-card>
+          </div>
+
+        <v-card v-if="this.message" class="mb-6">
             <v-card-title>
               {{ message }}
             </v-card-title>
-          </v-card>
+        </v-card>
 
-          <v-card v-if="this.askedQuestions.length > 0" class="mb-6">
-            <v-card-text>
-              <div
-                v-for="(question, index) in this.askedQuestions"
-                :key="question.id"
-                :class="`${question.color}--text`"
-              >
-                {{ `${index+1} ${question.text}?` }}
-              </div>
-            </v-card-text>
-          </v-card>
-          <div>
-            <v-btn
-              v-if="this.gameStatus == 'complete'"
-              @click="restart()"
-            >
-              Play Again!
-            </v-btn>
-          </div>
+        <div>
+          <v-btn
+            v-if="this.gameStatus == 'complete'"
+            @click="restart()"
+          >
+            Play Again!
+          </v-btn>
+        </div>
         </v-col>
       </v-row>
     </v-container>
