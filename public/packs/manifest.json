@@ -3,8 +3,10 @@
   "application.js.map": "/packs/js/application-7f2f41caa492acaaf657.js.map",
   "components/guess-subject.js": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js",
   "components/guess-subject.js.map": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map",
-  "components/question.js": "/packs/js/components/question-e504056d1b1fb9f0ccca.js",
-  "components/question.js.map": "/packs/js/components/question-e504056d1b1fb9f0ccca.js.map",
+  "components/pick-subject.js": "/packs/js/components/pick-subject-8216930f49c6bef0ba8c.js",
+  "components/pick-subject.js.map": "/packs/js/components/pick-subject-8216930f49c6bef0ba8c.js.map",
+  "components/question.js": "/packs/js/components/question-013499eb110ffdb3c1db.js",
+  "components/question.js.map": "/packs/js/components/question-013499eb110ffdb3c1db.js.map",
   "entrypoints": {
     "application": {
       "js": [
@@ -22,23 +24,31 @@
         "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map"
       ]
     },
-    "components/question": {
+    "components/pick-subject": {
       "js": [
-        "/packs/js/components/question-e504056d1b1fb9f0ccca.js"
+        "/packs/js/components/pick-subject-8216930f49c6bef0ba8c.js"
       ],
       "js.map": [
-        "/packs/js/components/question-e504056d1b1fb9f0ccca.js.map"
+        "/packs/js/components/pick-subject-8216930f49c6bef0ba8c.js.map"
+      ]
+    },
+    "components/question": {
+      "js": [
+        "/packs/js/components/question-013499eb110ffdb3c1db.js"
+      ],
+      "js.map": [
+        "/packs/js/components/question-013499eb110ffdb3c1db.js.map"
       ]
     },
     "main": {
       "js": [
-        "/packs/js/main-048f299baa49bf09651c.js"
+        "/packs/js/main-7579fbee76cf9fd52f99.js"
       ],
       "js.map": [
-        "/packs/js/main-048f299baa49bf09651c.js.map"
+        "/packs/js/main-7579fbee76cf9fd52f99.js.map"
       ]
     }
   },
-  "main.js": "/packs/js/main-048f299baa49bf09651c.js",
-  "main.js.map": "/packs/js/main-048f299baa49bf09651c.js.map"
+  "main.js": "/packs/js/main-7579fbee76cf9fd52f99.js",
+  "main.js.map": "/packs/js/main-7579fbee76cf9fd52f99.js.map"
 }

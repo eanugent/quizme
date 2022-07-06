@@ -3,6 +3,7 @@
       <v-row>
         <v-col xs="12">
           <v-card
+            v-if="gameStatus != 'intro'"
             :color="headerColor"
             :class="`header mb-6 ${message ? 'white--text' : ''}`"
           >
