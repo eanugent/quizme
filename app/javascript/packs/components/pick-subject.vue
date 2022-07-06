@@ -65,23 +65,39 @@
                 Question {{ askedQuestions.length+1 }} / 10
               </v-card-title>
               <v-card-text
-                v-for="question in this.question_options"
+                v-for="(question, index) in this.question_options"
                 :key="question.id"
               >
-                <span
+                <!-- <span
                   :class="question.color ? `${question.color}--text` : ''"
                 >
                   {{ question.question }}?
                   {{ question.answer }}
-                </span>
-                <v-btn
-                  v-if="!question.answer"
-                  color="orange"                  
-                  x-small
-                  @click="processQuestion(question.id, question.question)"                
+                </span> -->
+                <v-card
+                  color="indigo"
+                  @click="processQuestion(index)"                
                 >
-                Answer
-                </v-btn>
+                  <v-card-text
+                    class="white--text"
+                  >
+                    {{ question.question }}?
+                  </v-card-text>
+                </v-card>
+
+                <v-expand-transition>
+                  <v-card
+                    v-if="question.answer"
+                    class="transition-fast-in-fast-out v-card--reveal"
+                    style="height: 100%;"
+                  >
+                    <v-card-text
+                      :class="`${question.color}--text`"
+                    >
+                      {{ question.answer }}
+                    </v-card-text>
+                  </v-card>
+                </v-expand-transition>
               </v-card-text>
 
               <v-card-actions>
@@ -245,6 +261,7 @@ export default {
       .get("/subjects?game_type=Bible Characters")
       .then(response => {
         this.characters = response.data.data;
+        this.startGame();
       })
   },
   methods: {
@@ -265,25 +282,25 @@ export default {
           console.log(e);
         });
     },
-    processQuestion(question_id, question_text) {
-      this.question_options = this.question_options.filter((o) => o.id == question_id);
-
+    processQuestion(index) {
+      //this.question_options = this.question_options.filter((o) => o.id == question_id);
+      const question = this.question_options[index];
       axios
         .post(`/pick_subject/games/${this.gameId}/process_question`,
         {
-          question_id: question_id
+          question_id: question.id
         }).then(response => {
           const data = response.data.data;
           console.log(data);
           this.message = response.data.message;
 
-          this.question_options[0].color = this.answerValColors[data.answer_val-1];
-          this.question_options[0].answer = this.answerValText[data.answer_val-1];
+          this.question_options[index].color = this.answerValColors[data.answer_val-1];
+          this.question_options[index].answer = this.answerValText[data.answer_val-1];
 
           const questionLog =
             {
-              text: question_text,
-              id: question_id,
+              text: question.question,
+              id: question.id,
               color: this.answerValColors[data.answer_val-1]
             };
           console.log(questionLog);
