@@ -193,7 +193,6 @@ export default {
       .get("/subjects?game_type=Bible Characters")
       .then(response => {
         this.characters = response.data.data;
-        this.startGame();
       })
   },
   methods: {
