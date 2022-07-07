@@ -3,8 +3,8 @@
   "application.js.map": "/packs/js/application-7f2f41caa492acaaf657.js.map",
   "components/guess-subject.js": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js",
   "components/guess-subject.js.map": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map",
-  "components/pick-subject.js": "/packs/js/components/pick-subject-a93564e14be2898c2594.js",
-  "components/pick-subject.js.map": "/packs/js/components/pick-subject-a93564e14be2898c2594.js.map",
+  "components/pick-subject.js": "/packs/js/components/pick-subject-ec67e7520c36a5fd2f8a.js",
+  "components/pick-subject.js.map": "/packs/js/components/pick-subject-ec67e7520c36a5fd2f8a.js.map",
   "components/question.js": "/packs/js/components/question-013499eb110ffdb3c1db.js",
   "components/question.js.map": "/packs/js/components/question-013499eb110ffdb3c1db.js.map",
   "entrypoints": {
@@ -26,10 +26,10 @@
     },
     "components/pick-subject": {
       "js": [
-        "/packs/js/components/pick-subject-a93564e14be2898c2594.js"
+        "/packs/js/components/pick-subject-ec67e7520c36a5fd2f8a.js"
       ],
       "js.map": [
-        "/packs/js/components/pick-subject-a93564e14be2898c2594.js.map"
+        "/packs/js/components/pick-subject-ec67e7520c36a5fd2f8a.js.map"
       ]
     },
     "components/question": {
@@ -42,13 +42,13 @@
     },
     "main": {
       "js": [
-        "/packs/js/main-580b39e60b1c6f7e6e0a.js"
+        "/packs/js/main-b080742e240863293605.js"
       ],
       "js.map": [
-        "/packs/js/main-580b39e60b1c6f7e6e0a.js.map"
+        "/packs/js/main-b080742e240863293605.js.map"
       ]
     }
   },
-  "main.js": "/packs/js/main-580b39e60b1c6f7e6e0a.js",
-  "main.js.map": "/packs/js/main-580b39e60b1c6f7e6e0a.js.map"
+  "main.js": "/packs/js/main-b080742e240863293605.js",
+  "main.js.map": "/packs/js/main-b080742e240863293605.js.map"
 }

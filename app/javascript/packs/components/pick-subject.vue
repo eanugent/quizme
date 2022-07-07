@@ -16,7 +16,7 @@
               <span
                 v-else
               >
-                Question {{ askedQuestions.length+1 }}/10
+                Question {{ askedQuestions.length+1 }}/{{ maxQuestions }}
               </span>
             </v-card-title>
           </v-card>
@@ -45,7 +45,10 @@
               </div> 
               
               <div class="mt-6">
-                <v-btn @click="startGame()">
+                <v-btn
+                  color="success"
+                  @click="startGame()"
+                >
                   Ready to Go!
                 </v-btn>
               </div>
@@ -54,36 +57,34 @@
           
           <div v-if="this.gameStatus != 'intro'" >
             <v-card class="mb-6 pa-5">
-              <v-card-text
-                v-for="(question, index) in this.question_options"
-                :key="question.id"
-              >                
-                <v-card
-                  :color="question.disabled ? 'grey' : 'indigo'"
-                  :disabled="question.disabled || gameStatus != 'in_progress'"
-                  @click="processQuestion(index)"
-                >
-                  <v-card-text
-                    class="white--text"
-                  >
-                    {{ question.question }}?
-                  </v-card-text>
-                </v-card>
-
-                <v-expand-transition>
+              <div
+                v-if="askedQuestions.length+1 < maxQuestions"
+              >
+                <v-card-text
+                  v-for="(question, index) in this.question_options"
+                  :key="question.id"
+                >                
                   <v-card
-                    v-if="question.answer"
-                    class="transition-fast-in-fast-out v-card--reveal"
-                    style="height: 100%;"
+                    :color="question.disabled ? 'grey' : 'indigo'"
+                    :disabled="question.disabled || gameStatus != 'in_progress'"
+                    @click="processQuestion(index)"
                   >
                     <v-card-text
-                      :class="`${question.color}--text`"
+                      class="white--text"
                     >
-                      {{ question.answer }}
+                      {{ question.question }}?
                     </v-card-text>
                   </v-card>
-                </v-expand-transition>
-              </v-card-text>
+                </v-card-text>
+              </div>
+              <div
+                v-else
+              >
+                <h2>
+                  Time to take a guess below!
+                </h2>
+              </div>
+              
 
               <v-card-actions>
                 <v-btn
@@ -140,12 +141,19 @@
                   <div
                     v-for="character in characters"
                     :key="character.name"
-                    class="mb-2"
+                    class="mb-4"
                     >
+                    <h3
+                      v-if="correctCharacterId == character.id"
+                      class="green lighten-3 white--text pa-3"
+                    >
+                      {{ character.name }}
+                    </h3>
                     <v-btn
+                      v-else
                       color="orange"
+                      small
                       :disabled="guessedCharacterIds.includes(character.id) || gameStatus != 'in_progress'"
-                      x-small
                       @click="processGuess(character.id, character.name)"
                     >
                       {{ character.name }}
@@ -178,7 +186,8 @@ export default {
     maxQuestions: 10,
     gameStatus: 'intro',
     gameId: -1,
-    answerValColors: ['green', 'red', 'amber'],
+    answerValTextColors: ['green', 'red', 'amber'],
+    answerValBgColors: ['green lighten-2', 'red lighten-1', 'amber lighten-2'],
     answerValText: ['Yes', 'No', 'Not sure'],
     message: '',
     question_options: [],
@@ -188,6 +197,7 @@ export default {
     correctCharacterId: -1,
     showAskedQuestions: false,
     askedQuestions: [],
+    processing: false,
     guess: {},
     headerColor: 'white'
   }),
@@ -217,6 +227,8 @@ export default {
         });
     },
     processQuestion(index) {
+      if(this.processing) return;
+      this.processing = true;
       const question = this.question_options[index];
       this.question_options.forEach((q) => {
         if(q.id != question.id){
@@ -232,13 +244,13 @@ export default {
           const data = response.data.data;
           const answerIndex = data.answer_val - 1;
           this.message = this.answerValText[answerIndex];
-          this.headerColor = this.answerValColors[answerIndex];
+          this.headerColor = this.answerValBgColors[answerIndex];
 
           const questionLog =
             {
               text: question.question,
               id: question.id,
-              color: this.answerValColors[answerIndex]
+              color: this.answerValTextColors[answerIndex]
             };
           this.askedQuestions.push(questionLog);
 
@@ -249,20 +261,23 @@ export default {
                 if(this.gameStatus == 'complete') {
                   this.correctCharacterId = data.correct_subject_id;
                   const character = this.characters.find(c => c.id == data.correct_subject_id);
-                  this.message = `The correct character was ${character.name}`;
-                  this.headerColor = 'red';
+                  this.message = `It was ${character.name}`;
+                  this.headerColor = this.answerValBgColors[1];
                 }
                 else{
                   this.message = '';
                   this.headerColor = 'white';
                   this.question_options = data.next_question_options;
                 }
+                this.processing = false;
               },
             1000
-            );
+            );          
         });
     },
     processGuess(subject_id, name) {
+      if(this.processing) return;
+      this.processing = true;
       this.guessedCharacterIds.push(subject_id);
       axios
         .post(`/pick_subject/games/${this.gameId}/process_guess`,
@@ -275,24 +290,26 @@ export default {
 
           if(data.answer_val == 1){
             this.message = `${name} is the right answer!`
-            this.headerColor = 'green';
+            this.headerColor = this.answerValBgColors[0];
+            this.processing = false;
           }
           else if(data.answer_val == 2){
             this.message = `Not ${name}`;
-            this.headerColor = 'red';
+            this.headerColor = this.answerValBgColors[1];
             setTimeout(
             () =>
               {
                 if(this.gameStatus == 'complete'){
                   this.correctCharacterId = data.correct_subject_id;
                   const character = this.characters.find(c => c.id == data.correct_subject_id);
-                  this.message = `The correct character was ${character.name}`;
+                  this.message = `It was ${character.name}`;
                   this.headerColor = 'red';
                 }
                 else{
                   this.message = '';
                   this.headerColor = 'white';
-                }                
+                }
+                this.processing = false;
               },
             2000
             );
@@ -302,7 +319,7 @@ export default {
             {
               text: `Is it ${name}`,
               id: -1 * subject_id,
-              color: this.answerValColors[data.answer_val-1]
+              color: this.answerValTextColors[data.answer_val-1]
             };
           
           this.askedQuestions.push(questionLog);
@@ -314,6 +331,7 @@ export default {
       this.headerColor = 'white';
       this.askedQuestions = [];
       this.guessedCharacterIds = [];
+      this.correctCharacterId = -1;
       this.startGame();
     }
   }
@@ -323,6 +341,7 @@ export default {
 
 <style scoped>
   .header {
+    position: -webkit-sticky;
     position: sticky;
     top: 64px;
     z-index: 99;

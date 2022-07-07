@@ -147,20 +147,30 @@ class PickSubjectGame < ApplicationRecord
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
-                scores = next_question_scores
-                threshhold_size = next_question_scores_threshhold_size
-
-                best_cutoff_index = threshhold_size - 1
-                worst_cutoff_index = scores.count - threshhold_size
-
-                best_question_index = rand(0..best_cutoff_index)
-                random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
-                worst_question_index = rand(worst_cutoff_index..scores.count-1)
+                questions =
+                    Answer.where(
+                        question_id: remaining_question_ids,
+                        subject_id: self.remaining_subject_ids,
+                        answer_val: [1,2]
+                    ).pluck(
+                        :question_id,
+                        :answer_val
+                    ).partition do |ans|
+                        ans[1] == 1
+                    end
                 
+                yes_id = questions[0].sample[0]
+                no_id = questions[1].sample[0]
+                rand_id = questions[rand(0..1)].sample[0]
+
+                while [yes_id, no_id].include?(rand_id)
+                    rand_id = questions[rand(0..1)].sample[0]
+                end
+
                 [
-                    scores[best_question_index][0],
-                    scores[random_question_index][0],
-                    scores[worst_question_index][0]
+                    yes_id,
+                    no_id,
+                    rand_id
                 ].shuffle
             end.map do |question_id|
                 Question.find(question_id)
