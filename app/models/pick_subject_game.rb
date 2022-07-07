@@ -1,6 +1,8 @@
 class PickSubjectGame < ApplicationRecord
     belongs_to :subject, optional: true
 
+    MAX_QUESTIONS = 10
+
     before_create do |game|
         if self.subject_id.nil?
             self.subject_id = Subject.pluck(:id).sample
@@ -71,14 +73,12 @@ class PickSubjectGame < ApplicationRecord
 
             remaining_count = self.remaining_subject_ids.count - ids_to_remove.count
 
-            # if remaining_count <= 1 # Found the subject or failed
-            #     self.status = "complete"
-            # end
-
             unless remaining_count == 0
                 self.remaining_subject_ids = self.remaining_subject_ids.excluding(ids_to_remove)                
             end                
         end
+
+        check_question_guess_count
 
         save
         @next_question_scores = nil
@@ -93,9 +93,18 @@ class PickSubjectGame < ApplicationRecord
 
         if guessed_subject_id == self.subject_id
             self.status = "complete"
+            save
             1
         else
+            check_question_guess_count
+            save
             2
+        end
+    end
+
+    def check_question_guess_count
+        if self.guessed_subject_ids.count + self.asked_question_ids.count >= 10
+            self.status = 'complete'
         end
     end
 

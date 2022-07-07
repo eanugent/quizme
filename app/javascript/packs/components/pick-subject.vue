@@ -60,7 +60,7 @@
               >                
                 <v-card
                   :color="question.disabled ? 'grey' : 'indigo'"
-                  :disabled="question.disabled"
+                  :disabled="question.disabled || gameStatus != 'in_progress'"
                   @click="processQuestion(index)"
                 >
                   <v-card-text
@@ -144,7 +144,7 @@
                     >
                     <v-btn
                       color="orange"
-                      :disabled="guessedCharacterIds.includes(character.id)"
+                      :disabled="guessedCharacterIds.includes(character.id) || gameStatus != 'in_progress'"
                       x-small
                       @click="processGuess(character.id, character.name)"
                     >
@@ -156,9 +156,10 @@
               </v-expand-transition> 
             </v-card>
           </div>
-        <div>
+        <div
+          v-if="this.gameStatus == 'complete'"
+        >
           <v-btn
-            v-if="this.gameStatus == 'complete'"
             @click="restart()"
           >
             Play Again!
@@ -184,6 +185,7 @@ export default {
     showCharacters: false,
     characters: [],
     guessedCharacterIds: [],
+    correctCharacterId: -1,
     showAskedQuestions: false,
     askedQuestions: [],
     guess: {},
@@ -244,11 +246,19 @@ export default {
             () =>
               {
                 this.gameStatus = data.game_status;
-                this.message = '';
-                this.headerColor = 'white';
-                this.question_options = data.next_question_options;
+                if(this.gameStatus == 'complete') {
+                  this.correctCharacterId = data.correct_subject_id;
+                  const character = this.characters.find(c => c.id == data.correct_subject_id);
+                  this.message = `The correct character was ${character.name}`;
+                  this.headerColor = 'red';
+                }
+                else{
+                  this.message = '';
+                  this.headerColor = 'white';
+                  this.question_options = data.next_question_options;
+                }
               },
-            3000
+            1000
             );
         });
     },
@@ -261,6 +271,7 @@ export default {
         }).then(response => {
           const data = response.data.data;
           this.gameStatus = data.game_status;
+          this.correctCharacterId = data.correct_subject_id
 
           if(data.answer_val == 1){
             this.message = `${name} is the right answer!`
@@ -272,17 +283,25 @@ export default {
             setTimeout(
             () =>
               {
-                this.message = '';
-                this.headerColor = 'white';
+                if(this.gameStatus == 'complete'){
+                  this.correctCharacterId = data.correct_subject_id;
+                  const character = this.characters.find(c => c.id == data.correct_subject_id);
+                  this.message = `The correct character was ${character.name}`;
+                  this.headerColor = 'red';
+                }
+                else{
+                  this.message = '';
+                  this.headerColor = 'white';
+                }                
               },
-            3000
+            2000
             );
           }
 
           const questionLog =
             {
               text: `Is it ${name}`,
-              id: -1,
+              id: -1 * subject_id,
               color: this.answerValColors[data.answer_val-1]
             };
           

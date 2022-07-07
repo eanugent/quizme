@@ -38,7 +38,8 @@ module PickSubject
                 {
                     game_status: game.status,
                     answer_val: answer_val,
-                    next_question_options: next_question_options
+                    next_question_options: next_question_options,
+                    correct_subject_id: game.status == 'complete' ? game.subject_id : -1
                 },
                 status: :ok,
                 message: nil
@@ -53,7 +54,8 @@ module PickSubject
                 data:
                 {
                     game_status: game.status,
-                    answer_val: answer_val
+                    answer_val: answer_val,
+                    correct_subject_id: game.status == 'complete' ? game.subject_id : -1
                 },
                 status: :ok,
                 message: nil
