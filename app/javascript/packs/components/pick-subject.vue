@@ -2,24 +2,8 @@
     <v-container>      
       <v-row>
         <v-col xs="12">
-          <v-card
-            v-if="gameStatus != 'intro'"
-            :color="headerColor"
-            :class="`header mb-6 ${message ? 'white--text' : ''}`"
-          >
-            <v-card-title>
-              <span
-                v-if="message"
-              >
-                {{ message }}
-              </span>
-              <span
-                v-else
-              >
-                Question {{ askedQuestions.length+1 }}/{{ maxQuestions }}
-              </span>
-            </v-card-title>
-          </v-card>
+
+          <!-- Intro Card -->
           <v-card v-if="this.gameStatus == 'intro'" class="pa-3">
             <v-card-title>
               Can you read my mind?
@@ -30,13 +14,15 @@
                 I'm thinking of a Bible character from the list below.
                 Can you guess who it is in <strong>{{ maxQuestions }} questions or less</strong>?
                 After you click "READY TO GO!" below, I'll give you 3 questions to choose from. Choose the
-                question that will best help you figure out my character. Keep asking questions until you're ready to "TAKE A GUESS".
-                Guesses count as questions so use them carefully!
+                question that will best help you figure out my character. Click "PAST QUESTIONS" to view
+                questions you've previously asked. Click "TAKE A GUESS" to view the character list. When
+                you think you've figured me out, click on the character to see if you've figured me out. Guesses count as 
+                questions so use them carefully!
               </p>
               <h3>
                 Character List
               </h3>
-              <p>You can see this list again later</p>
+              <p>You can see this list again by clicking "Take a Guess"</p>
               <div
                 v-for="character in characters"
                 :key="character.name"
@@ -55,33 +41,81 @@
             </v-card-text>           
           </v-card>
           
-          <div v-if="this.gameStatus != 'intro'" >
-            <v-card class="mb-6 pa-5">
-              <div
-                v-if="askedQuestions.length+1 < maxQuestions"
+          <!-- Header/Message Card-->
+          <v-card
+            v-if="gameStatus != 'intro'"
+            :color="headerColor"
+            :class="`header mb-6 ${message ? 'white--text' : ''}`"
+          >
+            <v-card-title>
+              <span
+                v-if="message"
               >
-                <v-card-text
-                  v-for="(question, index) in this.question_options"
-                  :key="question.id"
-                >                
-                  <v-card
-                    :color="question.disabled ? 'grey' : 'indigo'"
-                    :disabled="question.disabled || gameStatus != 'in_progress'"
-                    @click="processQuestion(index)"
-                  >
-                    <v-card-text
-                      class="white--text"
-                    >
-                      {{ question.question }}?
-                    </v-card-text>
-                  </v-card>
-                </v-card-text>
-              </div>
-              <div
+                {{ message }}
+              </span>
+              <span
                 v-else
               >
+                Question {{ askedQuestions.length+1 }}/{{ maxQuestions }}
+              </span>
+            </v-card-title>
+          </v-card>
+
+          <!-- Game Div -->
+          <div v-if="this.gameStatus != 'intro'" >
+
+            <!-- Question Area -->
+            <v-card class="mb-6 pa-5">
+              <div
+                v-if="gameStatus=='in_progress'"
+              >
+                <div
+                  v-if="askedQuestions.length+1 < maxQuestions"
+                >
+                  <v-card-text
+                    v-for="(question, index) in this.question_options"
+                    :key="question.id"
+                  >                
+                    <v-card
+                      :color="question.disabled ? 'grey' : 'indigo'"
+                      :disabled="question.disabled"
+                      @click="processQuestion(index)"
+                    >
+                      <v-card-text
+                        class="white--text"
+                      >
+                        {{ question.question }}?
+                      </v-card-text>
+                    </v-card>
+                  </v-card-text>
+                </div>
+                <div
+                  v-else
+                >
+                  <h2>
+                    Time to take a guess below!
+                  </h2>
+                </div>
+              </div>
+              <div
+                v-else-if="askedQuestions.length < maxQuestions"
+              >
                 <h2>
-                  Time to take a guess below!
+                  <span
+                    v-if="askedQuestions.length / maxQuestions > .8"
+                  >
+                    Whew! Just made it in {{askedQuestions.length}} questions!
+                  </span>
+                  <span
+                    v-else-if="askedQuestions.length / maxQuestions > .5"
+                    >
+                    {{askedQuestions.length}} questions, not bad.
+                  </span>
+                  <span
+                    v-else
+                  >
+                    Unbelievable! Only {{askedQuestions.length}} questions?!?! Amazing!
+                  </span>
                 </h2>
               </div>
               
@@ -168,6 +202,7 @@
           v-if="this.gameStatus == 'complete'"
         >
           <v-btn
+            color="success"
             @click="restart()"
           >
             Play Again!
