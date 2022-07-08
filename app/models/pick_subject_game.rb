@@ -150,7 +150,7 @@ class PickSubjectGame < ApplicationRecord
                 questions =
                     Answer.where(
                         question_id: remaining_question_ids,
-                        subject_id: self.remaining_subject_ids,
+                        subject_id: subject_id,
                         answer_val: [1,2]
                     ).pluck(
                         :question_id,
@@ -159,21 +159,23 @@ class PickSubjectGame < ApplicationRecord
                         ans[1] == 1
                     end
                 
-                yes_id = questions[0].sample[0]
-                no_id = questions[1].sample[0]
-                rand_id = questions[rand(0..1)].sample[0]
+                question_ids = []
+                loop do
+                    question_ids << questions[0].sample
+                    question_ids << questions[1].sample
+                    question_ids << questions[rand(0..1)].sample
 
-                while [yes_id, no_id].include?(rand_id)
-                    rand_id = questions[rand(0..1)].sample[0]
+                    question_ids = question_ids.uniq.compact
+                    break if question_ids.count >= 3
                 end
 
-                [
-                    yes_id,
-                    no_id,
-                    rand_id
-                ].shuffle
-            end.map do |question_id|
-                Question.find(question_id)
+                question_ids.take(3).shuffle
+            end.then do |ids|
+                puts ids
+                Question.where(id: ids.pluck(0)).map do |q|
+                    q.question += " #{ids.find{|x| x[0] == q.id}[1]}"
+                    q
+                end
             end
     end
 
