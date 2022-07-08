@@ -98,7 +98,7 @@
                 </div>
               </div>
               <div
-                v-else-if="askedQuestions.length < maxQuestions"
+                v-else-if="guessedCharacterIds.includes(correctCharacterId)"
               >
                 <h2>
                   <span
