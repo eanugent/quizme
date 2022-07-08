@@ -22,7 +22,11 @@ class PickSubjectGame < ApplicationRecord
 
         while(!input.downcase.start_with?("q"))
             begin
+                puts "#{game.remaining_subject_ids.count} left"
+                game.print_remaining_subjects
+                puts "\n\n"
                 game.print_question_options
+                puts "\n\n"
 
                 input = gets.chomp
 
@@ -35,17 +39,8 @@ class PickSubjectGame < ApplicationRecord
                     3 => "Not sure"
                 }[answer_val]
 
-                puts answer_str + "\n"
-                #game.print_remaining_subjects
+                puts answer_str + "\n\n"
 
-                # if game.remaining_subject_ids.count == 1
-                #     puts "Your person is #{Subject.find(game.remaining_subject_ids[0]).name}!"
-                #     break
-                
-                # elsif game.remaining_subject_ids.count == 0
-                #     puts "You got me. Couldn't figure it out. Sorry :("
-                #     break
-                # end
             rescue => exception
                 puts "Error occurred: #{exception.message}"
                 break
@@ -147,35 +142,23 @@ class PickSubjectGame < ApplicationRecord
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
-                questions =
-                    Answer.where(
-                        question_id: remaining_question_ids,
-                        subject_id: subject_id,
-                        answer_val: [1,2]
-                    ).pluck(
-                        :question_id,
-                        :answer_val
-                    ).partition do |ans|
-                        ans[1] == 1
-                    end
+                scores = next_question_scores
+                threshhold_size = next_question_scores_threshhold_size
+
+                best_cutoff_index = threshhold_size - 1
+                worst_cutoff_index = scores.count - threshhold_size
+
+                best_question_index = rand(0..best_cutoff_index)
+                random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
+                worst_question_index = rand(worst_cutoff_index..scores.count-1)
                 
-                question_ids = []
-                loop do
-                    question_ids << questions[0].sample
-                    question_ids << questions[1].sample
-                    question_ids << questions[rand(0..1)].sample
-
-                    question_ids = question_ids.uniq.compact
-                    break if question_ids.count >= 3
-                end
-
-                question_ids.take(3).shuffle
-            end.then do |ids|
-                puts ids
-                Question.where(id: ids.pluck(0)).map do |q|
-                    q.question += " #{ids.find{|x| x[0] == q.id}[1]}"
-                    q
-                end
+                [
+                    scores[best_question_index][0],
+                    scores[random_question_index][0],
+                    scores[worst_question_index][0]
+                ].shuffle
+            end.map do |question_id|
+                Question.find(question_id)
             end
     end
 
@@ -198,8 +181,10 @@ class PickSubjectGame < ApplicationRecord
     end
 
     def print_remaining_subjects
-        self.remaining_subject_ids.each do |id|
-            puts Subject.find(id).name
+        self.remaining_subject_ids.map do |id|
+            Subject.find(id).name
+        end.sort.each do |name|
+            puts name
         end
     end
 
@@ -212,6 +197,6 @@ class PickSubjectGame < ApplicationRecord
     def remaining_subject_names(delimitter = ", ")
         self.remaining_subject_ids.map do |id|
             Subject.find(id).name
-        end.join(delimitter)
+        end.sort.join(delimitter)
     end
 end
