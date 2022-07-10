@@ -45,7 +45,7 @@
           <v-card
             v-if="gameStatus != 'intro'"
             :color="headerColor"
-            :class="`header mb-6 ${message ? 'white--text' : ''}`"
+            :class="`game-header mb-6 ${message ? 'white--text' : ''}`"
           >
             <v-card-title>
               <span
@@ -374,16 +374,12 @@ export default {
   
 </script>
 
-<style scoped>
-  .header {
+<style>
+  .game-header {
     position: -webkit-sticky;
     position: sticky;
     top: 64px;
     z-index: 99;
     margin: auto;
-  }
-
-  .header.feedback {
-    color: white;
   }
 </style>
