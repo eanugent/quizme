@@ -39,7 +39,7 @@ module PickSubject
                 correct_subject_id: game.status == 'complete' ? game.subject_id : -1
             }
 
-            ActionCable.server.broadcast("game_channel", response_json)
+            #ActionCable.server.broadcast("game_channel", response_json)
 
             render json:
             {
