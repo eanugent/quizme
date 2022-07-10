@@ -1,19 +1,19 @@
 {
-  "application.js": "/packs/js/application-9d2f49297aabe41dd820.js",
-  "application.js.map": "/packs/js/application-9d2f49297aabe41dd820.js.map",
+  "application.js": "/packs/js/application-6953eebdc663e016c1e8.js",
+  "application.js.map": "/packs/js/application-6953eebdc663e016c1e8.js.map",
   "components/guess-subject.js": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js",
   "components/guess-subject.js.map": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map",
-  "components/pick-subject.js": "/packs/js/components/pick-subject-84b85b4b25d972eaf572.js",
-  "components/pick-subject.js.map": "/packs/js/components/pick-subject-84b85b4b25d972eaf572.js.map",
+  "components/pick-subject.js": "/packs/js/components/pick-subject-5fd7ce38cf55634d4730.js",
+  "components/pick-subject.js.map": "/packs/js/components/pick-subject-5fd7ce38cf55634d4730.js.map",
   "components/question.js": "/packs/js/components/question-013499eb110ffdb3c1db.js",
   "components/question.js.map": "/packs/js/components/question-013499eb110ffdb3c1db.js.map",
   "entrypoints": {
     "application": {
       "js": [
-        "/packs/js/application-9d2f49297aabe41dd820.js"
+        "/packs/js/application-6953eebdc663e016c1e8.js"
       ],
       "js.map": [
-        "/packs/js/application-9d2f49297aabe41dd820.js.map"
+        "/packs/js/application-6953eebdc663e016c1e8.js.map"
       ]
     },
     "components/guess-subject": {
@@ -26,10 +26,10 @@
     },
     "components/pick-subject": {
       "js": [
-        "/packs/js/components/pick-subject-84b85b4b25d972eaf572.js"
+        "/packs/js/components/pick-subject-5fd7ce38cf55634d4730.js"
       ],
       "js.map": [
-        "/packs/js/components/pick-subject-84b85b4b25d972eaf572.js.map"
+        "/packs/js/components/pick-subject-5fd7ce38cf55634d4730.js.map"
       ]
     },
     "components/question": {
@@ -42,13 +42,13 @@
     },
     "main": {
       "js": [
-        "/packs/js/main-b300c7894d198797288b.js"
+        "/packs/js/main-affaa60d47d2a3bc6d71.js"
       ],
       "js.map": [
-        "/packs/js/main-b300c7894d198797288b.js.map"
+        "/packs/js/main-affaa60d47d2a3bc6d71.js.map"
       ]
     }
   },
-  "main.js": "/packs/js/main-b300c7894d198797288b.js",
-  "main.js.map": "/packs/js/main-b300c7894d198797288b.js.map"
+  "main.js": "/packs/js/main-affaa60d47d2a3bc6d71.js",
+  "main.js.map": "/packs/js/main-affaa60d47d2a3bc6d71.js.map"
 }

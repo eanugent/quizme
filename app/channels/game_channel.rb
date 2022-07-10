@@ -1,6 +1,6 @@
 class GameChannel < ApplicationCable::Channel
   def subscribed
-    #stream_from "game_channel"
+    stream_for PickSubjectGame.find(params[:game_id])
   end
 
   def unsubscribed

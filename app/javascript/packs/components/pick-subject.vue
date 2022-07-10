@@ -215,6 +215,7 @@
 
 <script>
 import axios from "axios";
+import consumer from "../../channels/consumer"
 
 export default {
   data: () => ({
@@ -241,7 +242,7 @@ export default {
       .get("/subjects?game_type=Bible Characters")
       .then(response => {
         this.characters = response.data.data;
-      })
+      });
   },
   methods: {
     startGame() {
@@ -253,6 +254,7 @@ export default {
         .then(response => {
           const data = response.data.data;
           this.gameId = data.game_id;
+          this.subscribeToChannel(this.gameId);
           this.message = response.data.message;
           this.question_options = data.next_question_options;
           this.gameStatus = data.game_status;
@@ -260,6 +262,23 @@ export default {
         .catch(e => {
           console.log(e);
         });
+    },
+    subscribeToChannel(gameId){
+      console.log('here it is');
+      consumer.subscriptions.create({channel: "GameChannel", game_id: gameId}, {
+        connected() {
+          // Called when the subscription is ready for use on the server
+          console.log('connected to game channel');
+        },
+
+        disconnected() {
+          // Called when the subscription has been terminated by the server
+        },
+
+        received(data) {
+          console.log(data);
+        }
+      });
     },
     processQuestion(index) {
       if(this.processing) return;
@@ -373,13 +392,3 @@ export default {
 };
   
 </script>
-
-<style>
-  .game-header {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 64px;
-    z-index: 99;
-    margin: auto;
-  }
-</style>

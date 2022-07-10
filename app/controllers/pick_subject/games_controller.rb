@@ -40,6 +40,7 @@ module PickSubject
             }
 
             #ActionCable.server.broadcast("game_channel", response_json)
+            GameChannel.broadcast_to(game, response_json)
 
             render json:
             {
