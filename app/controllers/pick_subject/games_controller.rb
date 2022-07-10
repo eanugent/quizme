@@ -32,15 +32,18 @@ module PickSubject
         def process_question
             answer_val = game.process_question(question_id_param)
 
+            response_json = {
+                game_status: game.status,
+                answer_val: answer_val,
+                next_question_options: next_question_options,
+                correct_subject_id: game.status == 'complete' ? game.subject_id : -1
+            }
+
+            ActionCable.server.broadcast("game_channel", response_json)
+
             render json:
             {
-                data:
-                {
-                    game_status: game.status,
-                    answer_val: answer_val,
-                    next_question_options: next_question_options,
-                    correct_subject_id: game.status == 'complete' ? game.subject_id : -1
-                },
+                data: response_json,
                 status: :ok,
                 message: nil
             }

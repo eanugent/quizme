@@ -1,6 +1,6 @@
 {
-  "application.js": "/packs/js/application-7f2f41caa492acaaf657.js",
-  "application.js.map": "/packs/js/application-7f2f41caa492acaaf657.js.map",
+  "application.js": "/packs/js/application-9d2f49297aabe41dd820.js",
+  "application.js.map": "/packs/js/application-9d2f49297aabe41dd820.js.map",
   "components/guess-subject.js": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js",
   "components/guess-subject.js.map": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map",
   "components/pick-subject.js": "/packs/js/components/pick-subject-84b85b4b25d972eaf572.js",
@@ -10,10 +10,10 @@
   "entrypoints": {
     "application": {
       "js": [
-        "/packs/js/application-7f2f41caa492acaaf657.js"
+        "/packs/js/application-9d2f49297aabe41dd820.js"
       ],
       "js.map": [
-        "/packs/js/application-7f2f41caa492acaaf657.js.map"
+        "/packs/js/application-9d2f49297aabe41dd820.js.map"
       ]
     },
     "components/guess-subject": {
