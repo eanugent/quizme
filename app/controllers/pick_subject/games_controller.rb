@@ -10,16 +10,18 @@ module PickSubject
         end
 
         def create
-            @game = PickSubjectGame.new(game_type: game_type_param)
-            @game.save
-
+            unless id_param
+                @game = PickSubjectGame.new(game_type: game_type_param)
+                @game.save
+            end
+            
             render json:
             { 
                 data:
                 {
-                    game_id: @game.id,
+                    game_id: game.id,
                     next_question_options: next_question_options,
-                    game_status: @game.status
+                    game_status: game.status
                 },
                 status: :ok
             }
@@ -36,10 +38,10 @@ module PickSubject
                 game_status: game.status,
                 answer_val: answer_val,
                 next_question_options: next_question_options,
-                correct_subject_id: game.status == 'complete' ? game.subject_id : -1
+                correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
+                type: 'process_question'
             }
 
-            #ActionCable.server.broadcast("game_channel", response_json)
             GameChannel.broadcast_to(game, response_json)
 
             render json:
@@ -69,7 +71,7 @@ module PickSubject
         private
 
         def id_param
-            params.require(:id)
+            params[:id]
         end
 
         def game_type_param

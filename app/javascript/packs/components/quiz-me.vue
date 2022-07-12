@@ -3,6 +3,22 @@
       <v-row>
         <v-col xs="12">
 
+          <!-- Mode Selection card-->
+          <v-card v-if="this.gameStatus == 'mode_selection'" class="pa-3">
+            <v-card-actions>
+              <v-btn
+                primary
+              >
+
+              </v-btn>
+              <v-btn
+                primary
+              >
+
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+
           <!-- Intro Card -->
           <v-card v-if="this.gameStatus == 'intro'" class="pa-3">
             <v-card-title>
@@ -221,7 +237,7 @@ export default {
   data: () => ({
     maxQuestions: 10,
     gameStatus: 'intro',
-    gameId: -1,
+    gameId: null,
     answerValTextColors: ['green', 'red', 'amber'],
     answerValBgColors: ['green lighten-2', 'red lighten-1', 'amber lighten-2'],
     answerValText: ['Yes', 'No', 'Not sure'],
@@ -243,19 +259,21 @@ export default {
       .then(response => {
         this.characters = response.data.data;
       });
+
+    this.gameId = gon.game_id;
   },
   methods: {
     startGame() {
       axios
         .post("/pick_subject/games", 
         {
-          game_type: "Bible Characters"
+          game_type: "Bible Characters",
+          id: this.gameId
         })
         .then(response => {
           const data = response.data.data;
           this.gameId = data.game_id;
           this.subscribeToChannel(this.gameId);
-          this.message = response.data.message;
           this.question_options = data.next_question_options;
           this.gameStatus = data.game_status;
         })
@@ -264,7 +282,6 @@ export default {
         });
     },
     subscribeToChannel(gameId){
-      console.log('here it is');
       consumer.subscriptions.create({channel: "GameChannel", game_id: gameId}, {
         connected() {
           // Called when the subscription is ready for use on the server
@@ -276,7 +293,13 @@ export default {
         },
 
         received(data) {
-          console.log(data);
+          switch(data.type){
+            case 'process_question':
+              //this.updateQuestions(data);
+              break;
+            case 'process_guess':
+              break;
+          }          
         }
       });
     },
@@ -326,8 +349,11 @@ export default {
                 this.processing = false;
               },
             1000
-            );          
+            );
         });
+    },
+    updateQuestions(data) {
+      
     },
     processGuess(subject_id, name) {
       if(this.processing) return;
@@ -386,6 +412,7 @@ export default {
       this.askedQuestions = [];
       this.guessedCharacterIds = [];
       this.correctCharacterId = -1;
+      this.gameId = null;
       this.startGame();
     }
   }
