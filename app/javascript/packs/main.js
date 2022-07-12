@@ -7,10 +7,20 @@
 
 import Vue from 'vue'
 import Vuetify from 'vuetify'
+import ActionCableVue from 'actioncable-vue'
 //import 'vuetify/dist/vuetify.min.css'
 import App from '../app.vue'
 
-Vue.use(Vuetify)
+Vue.use(Vuetify);
+
+Vue.use(ActionCableVue, {
+  debug: true,
+  debugLevel: "error",
+  connectionUrl: () => {
+    `wss://${window.location.host}/cable`
+  },
+  connectImmediately: true
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   const app = new Vue({

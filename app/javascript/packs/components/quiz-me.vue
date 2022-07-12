@@ -262,6 +262,19 @@ export default {
 
     this.gameId = gon.game_id;
   },
+  channels: {
+    GameChannel: {
+      connected(){
+        console.log("connected with actioncable-vue");
+      },
+      rejected() {},
+      received(data) {
+        console.log('Received data: ');
+        console.log(data);
+      },
+      disconnected() {}
+    }
+  },
   methods: {
     startGame() {
       axios
@@ -273,35 +286,18 @@ export default {
         .then(response => {
           const data = response.data.data;
           this.gameId = data.game_id;
-          this.subscribeToChannel(this.gameId);
+
+          this.$cable.subscribe({
+            channel: "GameChannel",
+            game_id: this.gameId
+          });
+
           this.question_options = data.next_question_options;
           this.gameStatus = data.game_status;
         })
         .catch(e => {
           console.log(e);
         });
-    },
-    subscribeToChannel(gameId){
-      consumer.subscriptions.create({channel: "GameChannel", game_id: gameId}, {
-        connected() {
-          // Called when the subscription is ready for use on the server
-          console.log('connected to game channel');
-        },
-
-        disconnected() {
-          // Called when the subscription has been terminated by the server
-        },
-
-        received(data) {
-          switch(data.type){
-            case 'process_question':
-              //this.updateQuestions(data);
-              break;
-            case 'process_guess':
-              break;
-          }          
-        }
-      });
     },
     processQuestion(index) {
       if(this.processing) return;
