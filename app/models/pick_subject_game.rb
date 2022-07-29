@@ -1,5 +1,6 @@
 class PickSubjectGame < ApplicationRecord
     belongs_to :subject, optional: true
+    belongs_to :game_room, optional: true
 
     MAX_QUESTIONS = 10
 

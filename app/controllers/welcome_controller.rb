@@ -1,5 +1,5 @@
 class WelcomeController < ApplicationController
   def index
-    gon.game_id = params[:game_id]
+    gon.room_key = params[:room_key]
   end
 end

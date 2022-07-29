@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_04_183217) do
+ActiveRecord::Schema.define(version: 2022_07_25_023641) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -20,6 +20,18 @@ ActiveRecord::Schema.define(version: 2022_07_04_183217) do
     t.integer "question_id", null: false
     t.integer "subject_id", null: false
     t.integer "answer_val", null: false
+  end
+
+  create_table "game_rooms", force: :cascade do |t|
+    t.string "room_key"
+    t.string "game_type"
+    t.integer "score_to_win"
+    t.integer "host_player_id"
+    t.integer "my_turn_player_id"
+    t.integer "player_turn_order", default: [], array: true
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.boolean "is_open", default: false
   end
 
   create_table "guess_subject_games", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -41,6 +53,17 @@ ActiveRecord::Schema.define(version: 2022_07_04_183217) do
     t.string "status", default: "in_progress"
     t.integer "remaining_subject_ids", default: [], array: true
     t.integer "guessed_subject_ids", default: [], array: true
+    t.integer "game_room_id"
+  end
+
+  create_table "players", force: :cascade do |t|
+    t.integer "game_room_id"
+    t.string "name"
+    t.integer "avatar_id"
+    t.integer "score"
+    t.boolean "is_connected"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "questions", force: :cascade do |t|

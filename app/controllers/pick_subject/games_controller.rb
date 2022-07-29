@@ -11,8 +11,7 @@ module PickSubject
 
         def create
             unless id_param
-                @game = PickSubjectGame.new(game_type: game_type_param)
-                @game.save
+                @game = PickSubjectGame.create(game_type: game_type_param)
             end
             
             render json:

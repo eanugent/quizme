@@ -3,22 +3,104 @@
       <v-row>
         <v-col xs="12">
 
-          <!-- Mode Selection card-->
-          <v-card v-if="this.gameStatus == 'mode_selection'" class="pa-3">
-            <v-card-actions>
-              <v-btn
-                primary
-              >
+          <!-- Mode Selection div-->
+          <div v-if="this.gameStatus == 'mode_selection'" class="pa-3">
+            <h1>
+              Welcome to Quiz Me!
+            </h1>
+            <v-card class="my-6 py-3">
+              <v-card-title>
+                Wanna give it a shot alone?
+              </v-card-title>
+              <v-card-text>
+                
+                  <v-btn
+                    color="primary"
+                    @click="startSoloGame()"
+                  >
+                    Play Solo
+                  </v-btn>
+              </v-card-text>
+            </v-card>
 
-              </v-btn>
-              <v-btn
-                primary
-              >
+            <v-card class="my-6 py-3">
+              <v-card-title>
+                Joining Friends?
+              </v-card-title>
+              <v-card-text>
+                <v-text-field
+                  v-model="roomKey"
+                  label="Room Key"
+                  outlined
+                  maxlength="4"
+                  >
+                </v-text-field>
+                <v-text-field
+                  v-model="playerName"
+                  label="Display Name"
+                  outlined
+                  maxlength="20"
+                  >
+                </v-text-field>
+                <v-btn
+                  color="primary"
+                  @click="joinRoom()"
+                >
+                  Join Private Room
+                </v-btn>
+              </v-card-text>
+            </v-card>
 
+            <v-card class="my-6 py-3">
+              <v-card-title>
+                Ready to Start a Party?
+              </v-card-title>
+              <v-card-text>
+                <v-btn
+                  color="primary"
+                  @click="setupRoom()"
+                >
+                  Create a Private Room
+                </v-btn>
+              </v-card-text>
+            </v-card>
+          </div>
+
+          <!-- Room Setup card -->
+          <v-card v-if="this.gameStatus == 'setup_room'" class="pa-3">
+            <v-card-text>
+                    <v-select
+                      v-model="roomGameType"
+                      :items="gameTypes"
+                      label="Game Type"
+                    ></v-select>
+                    <v-text-field
+                      v-model="playerName"
+                      hint="Visible to other players"
+                      label="Display Name"
+                    >
+                    </v-text-field>
+                    <v-text-field
+                      v-model="roomScoreToWin"
+                      hint="3 makes sense"
+                      label="Score to Win"
+                    >
+                    </v-text-field>
+
+              <v-btn
+                color="primary"
+                @click="openRoom()"
+              >
+                Open Room
               </v-btn>
-            </v-card-actions>
+            </v-card-text>
           </v-card>
 
+          <!-- Waiting for Players card-->
+          <v-div v-if="this.gameStatus == 'waiting_for_players'" class="pa-3">
+            <h1>Welcome to {{ this.roomHostName || 'Host' }}'s Private Room</h1>
+
+          </v-div>
           <!-- Intro Card -->
           <v-card v-if="this.gameStatus == 'intro'" class="pa-3">
             <v-card-title>
@@ -59,7 +141,7 @@
           
           <!-- Header/Message Card-->
           <v-card
-            v-if="gameStatus != 'intro'"
+            v-if="['intro', 'mode_selection', 'setup_room'].indexOf(gameStatus) === -1"
             :color="headerColor"
             :class="`game-header mb-6 ${message ? 'white--text' : ''}`"
           >
@@ -78,7 +160,7 @@
           </v-card>
 
           <!-- Game Div -->
-          <div v-if="this.gameStatus != 'intro'" >
+          <div v-if="['intro', 'mode_selection', 'setup_room'].indexOf(gameStatus) === -1">
 
             <!-- Question Area -->
             <v-card class="mb-6 pa-5">
@@ -231,13 +313,18 @@
 
 <script>
 import axios from "axios";
-import consumer from "../../channels/consumer"
 
 export default {
   data: () => ({
     maxQuestions: 10,
-    gameStatus: 'intro',
-    gameId: null,
+    gameTypes: ['Bible Characters'],
+    roomGameType: null,
+    gameStatus: 'mode_selection',
+    roomKey: '',
+    roomId: null,
+    roomScoreToWin: '3',
+    roomHostName: '',
+    playerName: '',
     answerValTextColors: ['green', 'red', 'amber'],
     answerValBgColors: ['green lighten-2', 'red lighten-1', 'amber lighten-2'],
     answerValText: ['Yes', 'No', 'Not sure'],
@@ -260,7 +347,7 @@ export default {
         this.characters = response.data.data;
       });
 
-    this.gameId = gon.game_id;
+    this.roomKey = gon.room_key;
   },
   channels: {
     GameChannel: {
@@ -276,6 +363,40 @@ export default {
     }
   },
   methods: {
+    joinRoom() {
+      this.$cable.subscribe({
+        channel: "GameChannel",
+        room_key: this.roomKey,
+        name: this.playerName
+      });
+    },
+    setupRoom() {
+      this.gameStatus = "setup_room";
+    },
+    startSolo() {
+      this.startGame();
+    },
+    openRoom() {
+      axios
+        .post("/pick_subject/game_rooms",
+        {
+          game_type: this.roomGameType,
+          player_name: this.playerName,
+          score_to_win: this.roomScoreToWin
+        })
+        .then(response => {
+          const data = response.data.data;
+
+          this.roomId = data.game_room_id;
+          this.roomKey = data.room_key;
+
+          this.$cable.subscribe({
+            channel: "GameChannel",
+            room_key: this.roomKey,
+            player_id: data.player_id
+          });
+        });
+    },
     startGame() {
       axios
         .post("/pick_subject/games", 
@@ -286,11 +407,6 @@ export default {
         .then(response => {
           const data = response.data.data;
           this.gameId = data.game_id;
-
-          this.$cable.subscribe({
-            channel: "GameChannel",
-            game_id: this.gameId
-          });
 
           this.question_options = data.next_question_options;
           this.gameStatus = data.game_status;
