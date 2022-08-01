@@ -5,5 +5,4 @@ test:
   adapter: test
 
 production:
-  adapter: redis
-  url: redis://redistogo:7110c945c207a120a1e9658cf82126b0@pearlfish.redistogo.com:10062/
+  adapter: postgresql
