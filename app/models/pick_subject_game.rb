@@ -11,6 +11,7 @@ class PickSubjectGame < ApplicationRecord
 
         if self.remaining_subject_ids.empty?
             self.remaining_subject_ids = Subject.where(game_type: game_type).pluck(:id)
+            self.update_current_question_ids
         end
     end
 
@@ -77,8 +78,9 @@ class PickSubjectGame < ApplicationRecord
         check_question_guess_count
 
         save
-        @next_question_scores = nil
-        @next_question_options = nil
+
+        update_current_question_ids
+
         answer_val
     end
 
@@ -104,42 +106,14 @@ class PickSubjectGame < ApplicationRecord
         end
     end
 
-    def next_question_scores
-        # The best next question is the question with the lowest value of
-        # ABS(yes_answer_subjects - no_answer_subjects) + unknown_answer_subjects
-        # This returns all options sorted in ascending order
-
-        @next_question_scores ||=
-            Answer.where(question_id: remaining_question_ids, subject_id: self.remaining_subject_ids).
-                group(:question_id, :answer_val).
-                count.
-                group_by{|k,v| k[0]}.
-                each_with_object({}) do |(k,v), h|
-                    h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
-                end.each_with_object({}) do |(k,v), h|
-                    h[k] = {}
-                    index1 = v[0]
-                    index2 = v[2]
-                    index3 = v[4]
-
-                    if index2 == 0
-                        index2 = (index1 % 3) + 1
-                        if index3 == 0
-                            index3 = (index2 % 3) + 1
-                        end
-                    elsif index3 == 0
-                        index3 = [1,2,3].excluding([index1, index2])[0]
-                    end
-
-                    h[k][index1] = v[1]
-                    h[k][index2] = v[3]
-                    h[k][index3] = v[5]
-                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-                sort_by{ |k,v| v }
+    def current_questions
+        self.current_question_ids.map do |question_id|
+            Question.find(question_id)
+        end
     end
 
-    def next_question_options
-        @next_question_options ||=
+    def update_current_question_ids
+        self.current_question_ids =
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
@@ -158,9 +132,40 @@ class PickSubjectGame < ApplicationRecord
                     scores[random_question_index][0],
                     scores[worst_question_index][0]
                 ].shuffle
-            end.map do |question_id|
-                Question.find(question_id)
             end
+    end
+
+    def next_question_scores
+        # The best next question is the question with the lowest value of
+        # ABS(yes_answer_subjects - no_answer_subjects) + unknown_answer_subjects
+        # This returns all options sorted in ascending order
+
+        Answer.where(question_id: remaining_question_ids, subject_id: self.remaining_subject_ids).
+            group(:question_id, :answer_val).
+            count.
+            group_by{|k,v| k[0]}.
+            each_with_object({}) do |(k,v), h|
+                h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
+            end.each_with_object({}) do |(k,v), h|
+                h[k] = {}
+                index1 = v[0]
+                index2 = v[2]
+                index3 = v[4]
+
+                if index2 == 0
+                    index2 = (index1 % 3) + 1
+                    if index3 == 0
+                        index3 = (index2 % 3) + 1
+                    end
+                elsif index3 == 0
+                    index3 = [1,2,3].excluding([index1, index2])[0]
+                end
+
+                h[k][index1] = v[1]
+                h[k][index2] = v[3]
+                h[k][index3] = v[5]
+            end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
+            sort_by{ |k,v| v }
     end
 
     def next_question_scores_threshhold_size

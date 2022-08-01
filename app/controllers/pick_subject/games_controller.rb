@@ -31,37 +31,44 @@ module PickSubject
         end
 
         def process_question
-            answer_val = game.process_question(question_id_param)
+            question = Question.find(question_id_param)
+            answer_val = game.process_question(question.id)
 
             response_json = {
+                type: 'question_processed',
                 game_status: game.status,
                 answer_val: answer_val,
                 next_question_options: next_question_options,
                 correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
-                type: 'process_question'
+                question: question.question,
+                question_id: question.id
             }
 
-            GameChannel.broadcast_to(game, response_json)
+            GameChannel.broadcast_to(game.game_room, response_json)
 
             render json:
             {
-                data: response_json,
                 status: :ok,
                 message: nil
             }
         end
 
         def process_guess
-            answer_val = game.process_guess(subject_id_param)
+            subject = Subject.find(subject_id_param)
+            answer_val = game.process_guess(subject.id)
+
+            response_json = {
+                type: 'guess_processed',
+                name: subject.name,
+                game_status: game.status,
+                answer_val: answer_val,
+                correct_subject_id: game.status == 'complete' ? game.subject_id : -1
+            }
+
+            GameChannel.broadcast_to(game.game_room, response_json)
 
             render json:
             {
-                data:
-                {
-                    game_status: game.status,
-                    answer_val: answer_val,
-                    correct_subject_id: game.status == 'complete' ? game.subject_id : -1
-                },
                 status: :ok,
                 message: nil
             }

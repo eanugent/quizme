@@ -13,13 +13,17 @@
                 Wanna give it a shot alone?
               </v-card-title>
               <v-card-text>
-                
-                  <v-btn
-                    color="primary"
-                    @click="startSoloGame()"
-                  >
-                    Play Solo
-                  </v-btn>
+                <!-- <v-select
+                  v-model="roomGameType"
+                  :items="gameTypes"
+                  label="Game Type"
+                ></v-select> -->
+                <v-btn
+                  color="primary"
+                  @click="startSoloGame()"
+                >
+                  Play Solo
+                </v-btn>
               </v-card-text>
             </v-card>
 
@@ -31,13 +35,15 @@
                 <v-text-field
                   v-model="roomKey"
                   label="Room Key"
+                  hint="NOT case sensitive"
                   outlined
                   maxlength="4"
                   >
                 </v-text-field>
                 <v-text-field
                   v-model="playerName"
-                  label="Display Name"
+                  hint="Doesn't have to be your real name"
+                  label="Your Display Name"
                   outlined
                   maxlength="20"
                   >
@@ -69,27 +75,27 @@
           <!-- Room Setup card -->
           <v-card v-if="this.gameStatus == 'setup_room'" class="pa-3">
             <v-card-text>
-                    <v-select
+                    <!-- <v-select
                       v-model="roomGameType"
                       :items="gameTypes"
                       label="Game Type"
-                    ></v-select>
+                    ></v-select> -->
                     <v-text-field
                       v-model="playerName"
-                      hint="Visible to other players"
-                      label="Display Name"
+                      hint="Doesn't have to be your real name"
+                      label="Your Display Name"
                     >
                     </v-text-field>
-                    <v-text-field
+                    <!-- <v-text-field
                       v-model="roomScoreToWin"
                       hint="3 makes sense"
                       label="Score to Win"
                     >
-                    </v-text-field>
+                    </v-text-field> -->
 
               <v-btn
                 color="primary"
-                @click="openRoom()"
+                @click="startMulti()"
               >
                 Open Room
               </v-btn>
@@ -97,10 +103,36 @@
           </v-card>
 
           <!-- Waiting for Players card-->
-          <v-div v-if="this.gameStatus == 'waiting_for_players'" class="pa-3">
+          <div v-if="this.gameStatus == 'waiting_for_players'" class="pa-3">
             <h1>Welcome to {{ this.roomHostName || 'Host' }}'s Private Room</h1>
 
-          </v-div>
+            <h3 class="mb-6">Game Key: {{ this.roomKey }}</h3>
+            <v-card class="mb-6">
+              <v-card-subtitle>
+                Connected Players
+              </v-card-subtitle>
+              <v-card-text>
+                <v-list>
+                  <v-list-item
+                    v-for="(player, index) in roomPlayers"
+                    :key="player.id"
+                  >
+                    <v-list-item-content>
+                      <v-list-item-title>{{ index+1 }} {{ player.name }}</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
+
+            <v-btn
+              v-if="isRoomHost"
+              color="primary"
+              @click="startNewGame()"
+            >
+              Start Game
+            </v-btn>                
+          </div>
           <!-- Intro Card -->
           <v-card v-if="this.gameStatus == 'intro'" class="pa-3">
             <v-card-title>
@@ -139,9 +171,20 @@
             </v-card-text>           
           </v-card>
           
+          <!-- Multiplayer Header Card-->
+          <v-card
+            v-if="isMultiPlayer && ['in_progress', 'complete'].indexOf(gameStatus) > -1"
+            :color="myTurn ? 'green' : 'white'"
+            :class="`mb-6 ${myTurn ? 'white--text' : ''}`">
+            <v-card-title
+            >
+              {{ myTurn ? 'My' : `${this.roomMyTurnPlayerName}'s` }} Turn
+            </v-card-title>
+          </v-card>
+
           <!-- Header/Message Card-->
           <v-card
-            v-if="['intro', 'mode_selection', 'setup_room'].indexOf(gameStatus) === -1"
+            v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1"
             :color="headerColor"
             :class="`game-header mb-6 ${message ? 'white--text' : ''}`"
           >
@@ -160,7 +203,7 @@
           </v-card>
 
           <!-- Game Div -->
-          <div v-if="['intro', 'mode_selection', 'setup_room'].indexOf(gameStatus) === -1">
+          <div v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1">
 
             <!-- Question Area -->
             <v-card class="mb-6 pa-5">
@@ -177,7 +220,7 @@
                     <v-card
                       :color="question.disabled ? 'grey' : 'indigo'"
                       :disabled="question.disabled"
-                      @click="processQuestion(index)"
+                      @click="selectQuestion(index)"
                     >
                       <v-card-text
                         class="white--text"
@@ -286,7 +329,7 @@
                       color="orange"
                       small
                       :disabled="guessedCharacterIds.includes(character.id) || gameStatus != 'in_progress'"
-                      @click="processGuess(character.id, character.name)"
+                      @click="makeGuess(character.id, character.name)"
                     >
                       {{ character.name }}
                     </v-btn>
@@ -318,13 +361,20 @@ export default {
   data: () => ({
     maxQuestions: 10,
     gameTypes: ['Bible Characters'],
-    roomGameType: null,
+    roomGameType: 'Bible Characters',
     gameStatus: 'mode_selection',
+    gameId: null,
+    isMultiPlayer: false,
     roomKey: '',
     roomId: null,
     roomScoreToWin: '3',
     roomHostName: '',
+    isRoomHost: false,
     playerName: '',
+    playerId: null,
+    roomPlayers: [],
+    roomMyTurnPlayerId: null,
+    roomMyTurnPlayerName: null,
     answerValTextColors: ['green', 'red', 'amber'],
     answerValBgColors: ['green lighten-2', 'red lighten-1', 'amber lighten-2'],
     answerValText: ['Yes', 'No', 'Not sure'],
@@ -346,35 +396,74 @@ export default {
       .then(response => {
         this.characters = response.data.data;
       });
-
-    this.roomKey = gon.room_key;
   },
   channels: {
     GameChannel: {
       connected(){
-        console.log("connected with actioncable-vue");
+        this.reportConnected();
       },
       rejected() {},
       received(data) {
-        console.log('Received data: ');
-        console.log(data);
+        switch(data.type){
+          case 'question_processed':
+            this.questionProcessed(data);
+            break;
+          case 'guess_processed':
+            this.guessProcessed(data);
+            break;
+          case 'game_room_change':
+            this.refreshRoom(data);
+            break;
+          default:
+            break;
+        }
       },
       disconnected() {}
     }
   },
+  computed: {
+    myTurn() {
+      return this.roomMyTurnPlayerId == this.playerId;
+    }
+  },
   methods: {
-    joinRoom() {
-      this.$cable.subscribe({
+    joinRoom() {      
+      axios.
+        post('/pick_subject/game_rooms/add_player/',
+        {
+          room_key: this.roomKey,
+          player_name: this.playerName
+        }).then(response => {
+            const data = response.data.data;
+            this.playerId = data.player_id;
+            this.isMultiPlayer = true;
+
+            this.$cable.subscribe({
+              channel: "GameChannel",
+              room_key: this.roomKey,
+              player_id: this.playerId
+            });
+        });
+    },
+    reportConnected() {
+      this.$cable.perform({
         channel: "GameChannel",
-        room_key: this.roomKey,
-        name: this.playerName
+        action: "report_connected"
       });
     },
     setupRoom() {
       this.gameStatus = "setup_room";
     },
-    startSolo() {
-      this.startGame();
+    startSoloGame() {
+      this.playerName = 'SOLO';
+      this.roomScoreToWin = '0';
+      this.openRoom();
+    },
+    startMulti() {
+      this.isMultiPlayer = true;
+      this.isRoomHost = true;
+      this.openRoom();
+      this.gameStatus = 'waiting_for_players';
     },
     openRoom() {
       axios
@@ -389,20 +478,50 @@ export default {
 
           this.roomId = data.game_room_id;
           this.roomKey = data.room_key;
+          this.playerId = data.player_id;
 
           this.$cable.subscribe({
             channel: "GameChannel",
             room_key: this.roomKey,
-            player_id: data.player_id
+            player_id: this.playerId
           });
         });
+    },
+    refreshRoom(data) {
+      this.roomPlayers = data.players;
+      this.roomHostName = data.host_player_name;
+      this.roomMyTurnPlayerId = data.my_turn_player_id;
+      this.roomMyTurnPlayerName = data.my_turn_player_name;
+      this.gameId = data.game_id;
+      if(data.game_status) {
+        this.gameStatus = data.game_status;
+      }
+      else if (this.gameStatus == 'mode_selection') {
+        if(this.isMultiPlayer) {
+          this.gameStatus = 'waiting_for_players';
+        }
+        else {
+          this.startNewGame();
+        }
+      }
+
+      if(!this.question_options?.length && data.current_questions?.length){
+        this.question_options = data.current_questions;
+      }
+    },
+    startNewGame() {
+      this.$cable.perform({
+        channel: "GameChannel",
+        action: "start_new_game"
+      });
     },
     startGame() {
       axios
         .post("/pick_subject/games", 
         {
           game_type: "Bible Characters",
-          id: this.gameId
+          room_id: this.roomId,
+          player_id: this.playerId
         })
         .then(response => {
           const data = response.data.data;
@@ -415,7 +534,12 @@ export default {
           console.log(e);
         });
     },
-    processQuestion(index) {
+    selectQuestion(index) {
+      if(!this.myTurn){
+        this.warnNotMyTurn();
+        return;
+      }
+
       if(this.processing) return;
       this.processing = true;
       const question = this.question_options[index];
@@ -424,99 +548,122 @@ export default {
           q.disabled = true;
         }
       });
-      
-      axios
-        .post(`/pick_subject/games/${this.gameId}/process_question`,
-        {
+
+      this.$cable.perform({
+        channel: "GameChannel",
+        action: "process_question",
+        data: {
           question_id: question.id
-        }).then(response => {
-          const data = response.data.data;
-          const answerIndex = data.answer_val - 1;
-          this.message = this.answerValText[answerIndex];
-          this.headerColor = this.answerValBgColors[answerIndex];
-
-          const questionLog =
-            {
-              text: question.question,
-              id: question.id,
-              color: this.answerValTextColors[answerIndex]
-            };
-          this.askedQuestions.push(questionLog);
-
-          setTimeout(
-            () =>
-              {
-                this.gameStatus = data.game_status;
-                if(this.gameStatus == 'complete') {
-                  this.correctCharacterId = data.correct_subject_id;
-                  const character = this.characters.find(c => c.id == data.correct_subject_id);
-                  this.message = `It was ${character.name}`;
-                  this.headerColor = this.answerValBgColors[1];
-                }
-                else{
-                  this.message = '';
-                  this.headerColor = 'white';
-                  this.question_options = data.next_question_options;
-                }
-                this.processing = false;
-              },
-            1000
-            );
-        });
+        },
+      });
     },
-    updateQuestions(data) {
-      
-    },
-    processGuess(subject_id, name) {
-      if(this.processing) return;
-      this.processing = true;
-      this.guessedCharacterIds.push(subject_id);
-      axios
-        .post(`/pick_subject/games/${this.gameId}/process_guess`,
+    questionProcessed(data) {
+      const answerIndex = data.answer_val - 1;
+      this.message = this.answerValText[answerIndex];
+      this.headerColor = this.answerValBgColors[answerIndex];
+
+      const questionLog =
         {
-          subject_id: subject_id
-        }).then(response => {
-          const data = response.data.data;
-          this.gameStatus = data.game_status;
-          this.correctCharacterId = data.correct_subject_id
+          text: data.question,
+          id: data.question_id,
+          color: this.answerValTextColors[answerIndex]
+        };
+      this.askedQuestions.push(questionLog);
 
-          if(data.answer_val == 1){
-            this.message = `${name} is the right answer!`
-            this.headerColor = this.answerValBgColors[0];
+      setTimeout(
+        () =>
+          {
+            this.gameStatus = data.game_status;
+            if(this.gameStatus == 'complete') {
+              this.correctCharacterId = data.correct_subject_id;
+              const character = this.characters.find(c => c.id == data.correct_subject_id);
+              this.message = `It was ${character.name}`;
+              this.headerColor = this.answerValBgColors[1];
+            }
+            else{
+              this.message = '';
+              this.headerColor = 'white';
+              this.question_options = data.next_question_options;
+              this.roomMyTurnPlayerId = data.my_turn_player_id;
+              this.roomMyTurnPlayerName = data.my_turn_player_name;
+            }
             this.processing = false;
-          }
-          else if(data.answer_val == 2){
-            this.message = `Not ${name}`;
-            this.headerColor = this.answerValBgColors[1];
-            setTimeout(
-            () =>
-              {
-                if(this.gameStatus == 'complete'){
-                  this.correctCharacterId = data.correct_subject_id;
-                  const character = this.characters.find(c => c.id == data.correct_subject_id);
-                  this.message = `It was ${character.name}`;
-                  this.headerColor = 'red';
-                }
-                else{
-                  this.message = '';
-                  this.headerColor = 'white';
-                }
-                this.processing = false;
-              },
-            2000
-            );
-          }
+          },
+        1000
+        );
+    },
+    makeGuess(subjectId) {
+      if(!this.myTurn){
+        this.warnNotMyTurn();
+        return;
+      }
 
-          const questionLog =
-            {
-              text: `Is it ${name}`,
-              id: -1 * subject_id,
-              color: this.answerValTextColors[data.answer_val-1]
-            };
-          
-          this.askedQuestions.push(questionLog);
-          this.guess = {};
+      if(this.processing) return;
+        this.processing = true;
+        this.guessedCharacterIds.push(subjectId);
+
+        this.$cable.perform({
+          channel: "GameChannel",
+          action: "process_guess",
+          data: {
+            subject_id: subjectId
+          },
         });
+    },
+    guessProcessed(data) {
+      this.gameStatus = data.game_status;
+      this.correctCharacterId = data.correct_subject_id
+
+      if(data.answer_val == 1){
+        this.message = `${data.name} is the right answer!`
+        this.headerColor = this.answerValBgColors[0];
+        this.processing = false;
+      }
+      else if(data.answer_val == 2){
+        this.message = `Not ${data.name}`;
+        this.headerColor = this.answerValBgColors[1];
+        setTimeout(
+        () =>
+          {
+            if(this.gameStatus == 'complete'){
+              this.correctCharacterId = data.correct_subject_id;
+              const character = this.characters.find(c => c.id == data.correct_subject_id);
+              this.message = `It was ${character.name}`;
+              this.headerColor = 'red';
+            }
+            else{
+              this.message = '';
+              this.headerColor = 'white';
+              this.roomMyTurnPlayerId = data.my_turn_player_id;
+              this.roomMyTurnPlayerName = data.my_turn_player_name;
+            }
+            this.processing = false;
+          },
+        2000
+        );
+      }
+
+      const questionLog =
+        {
+          text: `Is it ${data.name}`,
+          id: -1 * data.guessed_subject_id,
+          color: this.answerValTextColors[data.answer_val-1]
+        };
+      
+      this.askedQuestions.push(questionLog);
+      this.guess = {};
+    },
+    warnNotMyTurn() {
+      this.message = `It's ${this.roomMyTurnPlayerName}'s Turn'`;
+        this.headerColor = 'red';
+        setTimeout(
+        () =>
+          {
+              this.message = '';
+              this.headerColor = 'white';            
+          },
+        2000
+        );
     },
     restart() {
       this.message = '';
@@ -525,7 +672,7 @@ export default {
       this.guessedCharacterIds = [];
       this.correctCharacterId = -1;
       this.gameId = null;
-      this.startGame();
+      this.startNewGame();
     }
   }
 };

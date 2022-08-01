@@ -1,5 +1,23 @@
 class GameRoom < ApplicationRecord
-    has_many :players    
+    has_many :players
+    has_many :pick_subject_games    
+
+    def self.find_by_key(key)
+        return self.where('is_open = ? AND lower(room_key) = ?', true, key.downcase).first
+    end
+
+    def room_state_for_json
+        {
+            host_player_id: host_player_id,
+            host_player_name: host_player_name,
+            my_turn_player_id: my_turn_player_id,
+            my_turn_player_name: my_turn_player_name,
+            players: players,
+            game_id: current_game&.id,
+            game_status: current_game&.status,
+            current_questions: current_game&.current_questions
+        }
+    end
 
     def process_player_disconnected(player_id)
         if self.my_turn_player_id == player_id
@@ -23,5 +41,20 @@ class GameRoom < ApplicationRecord
         self.my_turn_player_id = self.player_turn_order[next_index]
 
         self.save
+    end
+
+    def current_game
+        pick_subject_games.
+            select { |g| g.status == "in_progress" }.
+            sort_by { |g| g.created_at }.
+            last
+    end
+
+    def host_player_name
+        Player.where(id: host_player_id).first&.name
+    end
+
+    def my_turn_player_name
+        Player.where(id: my_turn_player_id).first&.name
     end
 end

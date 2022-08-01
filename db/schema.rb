@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_25_023641) do
+ActiveRecord::Schema.define(version: 2022_07_29_015426) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -22,16 +22,16 @@ ActiveRecord::Schema.define(version: 2022_07_25_023641) do
     t.integer "answer_val", null: false
   end
 
-  create_table "game_rooms", force: :cascade do |t|
+  create_table "game_rooms", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "room_key"
     t.string "game_type"
     t.integer "score_to_win"
-    t.integer "host_player_id"
-    t.integer "my_turn_player_id"
-    t.integer "player_turn_order", default: [], array: true
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "is_open", default: false
+    t.uuid "host_player_id"
+    t.uuid "my_turn_player_id"
+    t.uuid "player_turn_order", default: [], array: true
   end
 
   create_table "guess_subject_games", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -53,17 +53,18 @@ ActiveRecord::Schema.define(version: 2022_07_25_023641) do
     t.string "status", default: "in_progress"
     t.integer "remaining_subject_ids", default: [], array: true
     t.integer "guessed_subject_ids", default: [], array: true
-    t.integer "game_room_id"
+    t.uuid "game_room_id"
+    t.integer "current_question_ids", default: [], array: true
   end
 
-  create_table "players", force: :cascade do |t|
-    t.integer "game_room_id"
+  create_table "players", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "name"
     t.integer "avatar_id"
     t.integer "score"
     t.boolean "is_connected"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.uuid "game_room_id"
   end
 
   create_table "questions", force: :cascade do |t|
