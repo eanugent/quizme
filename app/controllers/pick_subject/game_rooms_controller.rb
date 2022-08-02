@@ -12,7 +12,8 @@ module PickSubject
         end
 
         def create
-            room_key = [*0..9, *'A'..'Z'].shuffle[0..3].join
+            #room_key = [*0..9, *'A'..'Z'].shuffle[0..3].join
+            room_key = [*0..9].shuffle[0..3].join
 
             new_room = GameRoom.create(
                 room_key: room_key,

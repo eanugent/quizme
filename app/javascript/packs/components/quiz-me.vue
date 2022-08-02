@@ -45,6 +45,7 @@
                   hint="Doesn't have to be your real name"
                   label="Your Display Name"
                   outlined
+                  counter
                   maxlength="20"
                   >
                 </v-text-field>
@@ -84,6 +85,8 @@
                       v-model="playerName"
                       hint="Doesn't have to be your real name"
                       label="Your Display Name"
+                      counter
+                      maxLength="20"
                     >
                     </v-text-field>
                     <!-- <v-text-field
@@ -195,9 +198,15 @@
                 {{ message }}
               </span>
               <span
+                v-else-if="questionsLeft > 1"
+                :class="questionsLeft > 4 ? 'black--text' : 'red--text'"
+              >
+                {{ questionsLeft }} Questions Left
+              </span>
+              <span
                 v-else
               >
-                Question {{ askedQuestions.length+1 }}/{{ maxQuestions }}
+                Time to take a guess!
               </span>
             </v-card-title>
           </v-card>
@@ -230,13 +239,13 @@
                     </v-card>
                   </v-card-text>
                 </div>
-                <div
+                <!-- <div
                   v-else
                 >
                   <h2>
                     Time to take a guess below!
                   </h2>
-                </div>
+                </div> -->
               </div>
               <div
                 v-else-if="guessedCharacterIds.includes(correctCharacterId)"
@@ -340,11 +349,11 @@
             </v-card>
           </div>
         <div
-          v-if="this.gameStatus == 'complete'"
+          v-if="this.gameStatus == 'complete' && (!isMultiPlayer || sRoomHost)"
         >
           <v-btn
             color="success"
-            @click="restart()"
+            @click="startNewGame()"
           >
             Play Again!
           </v-btn>
@@ -424,6 +433,9 @@ export default {
   computed: {
     myTurn() {
       return this.roomMyTurnPlayerId == this.playerId;
+    },
+    questionsLeft() {
+      return this.maxQuestions - this.askedQuestions.length;
     }
   },
   methods: {
@@ -488,11 +500,16 @@ export default {
         });
     },
     refreshRoom(data) {
+      if (this.gameId != data.game_id) {
+        this.initForNewGame();
+        this.gameId = data.game_id;
+      }
+
       this.roomPlayers = data.players;
       this.roomHostName = data.host_player_name;
       this.roomMyTurnPlayerId = data.my_turn_player_id;
       this.roomMyTurnPlayerName = data.my_turn_player_name;
-      this.gameId = data.game_id;
+      
       if(data.game_status) {
         this.gameStatus = data.game_status;
       }
@@ -543,11 +560,7 @@ export default {
       if(this.processing) return;
       this.processing = true;
       const question = this.question_options[index];
-      this.question_options.forEach((q) => {
-        if(q.id != question.id){
-          q.disabled = true;
-        }
-      });
+      this.disableOtherQuestions(question.id);
 
       this.$cable.perform({
         channel: "GameChannel",
@@ -558,6 +571,8 @@ export default {
       });
     },
     questionProcessed(data) {
+      this.disableOtherQuestions(data.question_id);
+
       const answerIndex = data.answer_val - 1;
       this.message = this.answerValText[answerIndex];
       this.headerColor = this.answerValBgColors[answerIndex];
@@ -591,6 +606,13 @@ export default {
           },
         1000
         );
+    },
+    disableOtherQuestions(questionId){
+      this.question_options.forEach((q) => {
+        if(q.id != questionId){
+          q.disabled = true;
+        }
+      });
     },
     makeGuess(subjectId) {
       if(!this.myTurn){
@@ -654,7 +676,7 @@ export default {
       this.guess = {};
     },
     warnNotMyTurn() {
-      this.message = `It's ${this.roomMyTurnPlayerName}'s Turn'`;
+      this.message = `It's ${this.roomMyTurnPlayerName}'s Turn`;
         this.headerColor = 'red';
         setTimeout(
         () =>
@@ -665,14 +687,12 @@ export default {
         2000
         );
     },
-    restart() {
+    initForNewGame() {
       this.message = '';
       this.headerColor = 'white';
       this.askedQuestions = [];
       this.guessedCharacterIds = [];
       this.correctCharacterId = -1;
-      this.gameId = null;
-      this.startNewGame();
     }
   }
 };
