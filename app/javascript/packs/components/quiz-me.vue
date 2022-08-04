@@ -621,6 +621,9 @@ export default {
       }
     },
     startNewGame() {
+      this.$refs.currentTime = 0;
+      this.$refs.audioElm.play();
+
       this.$cable.perform({
         channel: "GameChannel",
         action: "start_new_game"
@@ -785,8 +788,10 @@ export default {
         );
     },
     initForNewGame() {
-      this.$refs.audioElm.currentTime = 0;
-      this.$refs.audioElm.play();
+      if(this.$refs.audioElm.paused){
+        this.$refs.audioElm.currentTime = 0;
+        this.$refs.audioElm.play();
+      }
 
       this.message = '';
       this.headerColor = 'white';
