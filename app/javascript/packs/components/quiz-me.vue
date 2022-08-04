@@ -1,6 +1,6 @@
 <template>
     <v-container>
-      <audio ref="audioElm" src="/welcome/audio?id=31ljk23tjkl235l"></audio>
+      <audio ref="audioElm" src="/welcome/audio?id=31ljk23tjkl235l" loop></audio>
       <v-row>
         <v-col>
           <v-icon
@@ -9,6 +9,13 @@
             @click="backToHome()"
           >
             mdi-home
+          </v-icon>
+          <v-icon
+            v-if="gameStatus!='mode_selection'"
+            class="mb-3"
+            @click="toggleAudio()"
+          >
+            mdi-volume-off
           </v-icon>
             <div
               v-if="this.gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
@@ -492,9 +499,19 @@ export default {
   },
   methods: {
     backToHome() {
+      this.$refs.audioElm.pause();
+
       this.playerName = '';
       this.roomKey = '';
       this.gameStatus='mode_selection';
+    },
+    toggleAudio(){
+      if(this.$refs.audioElm.paused){
+        this.$refs.audioElm.play();
+      }
+      else{
+        this.$refs.audioElm.pause();
+      }
     },
     joinRoom() {
       this.roomKeyInvalid = false;
@@ -591,8 +608,6 @@ export default {
       }
     },
     startNewGame() {
-      this.$refs.audioElm.play();
-      
       this.$cable.perform({
         channel: "GameChannel",
         action: "start_new_game"
@@ -656,6 +671,7 @@ export default {
           {
             this.gameStatus = data.game_status;
             if(this.gameStatus == 'complete') {
+              this.$refs.audioElm.pause();
               this.correctCharacterId = data.correct_subject_id;
               const character = this.characters.find(c => c.id == data.correct_subject_id);
               this.message = `It was ${character.name}`;
@@ -703,6 +719,7 @@ export default {
       this.correctCharacterId = data.correct_subject_id
 
       if(data.answer_val == 1){
+        this.$refs.audioElm.pause();
         this.message = `${data.name} is the right answer!`
         this.headerColor = this.answerValBgColors[0];
         this.processing = false;
@@ -714,6 +731,7 @@ export default {
         () =>
           {
             if(this.gameStatus == 'complete'){
+              this.$refs.audioElm.pause();
               this.correctCharacterId = data.correct_subject_id;
               const character = this.characters.find(c => c.id == data.correct_subject_id);
               this.message = `It was ${character.name}`;
@@ -754,6 +772,9 @@ export default {
         );
     },
     initForNewGame() {
+      this.$refs.audioElm.currentTime = 0;
+      this.$refs.audioElm.play();
+console.log('i am here');
       this.message = '';
       this.headerColor = 'white';
       this.askedQuestions = [];
