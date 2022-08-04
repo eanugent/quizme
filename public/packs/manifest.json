@@ -3,8 +3,8 @@
   "application.js.map": "/packs/js/application-6953eebdc663e016c1e8.js.map",
   "components/guess-subject.js": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js",
   "components/guess-subject.js.map": "/packs/js/components/guess-subject-e136a2617a2db2ce2394.js.map",
-  "components/quiz-me.js": "/packs/js/components/quiz-me-d2edef500f9d2b605f7b.js",
-  "components/quiz-me.js.map": "/packs/js/components/quiz-me-d2edef500f9d2b605f7b.js.map",
+  "components/quiz-me.js": "/packs/js/components/quiz-me-2e71bb709a29758ae3ea.js",
+  "components/quiz-me.js.map": "/packs/js/components/quiz-me-2e71bb709a29758ae3ea.js.map",
   "entrypoints": {
     "application": {
       "js": [
@@ -24,21 +24,21 @@
     },
     "components/quiz-me": {
       "js": [
-        "/packs/js/components/quiz-me-d2edef500f9d2b605f7b.js"
+        "/packs/js/components/quiz-me-2e71bb709a29758ae3ea.js"
       ],
       "js.map": [
-        "/packs/js/components/quiz-me-d2edef500f9d2b605f7b.js.map"
+        "/packs/js/components/quiz-me-2e71bb709a29758ae3ea.js.map"
       ]
     },
     "main": {
       "js": [
-        "/packs/js/main-794e94dd7e6f07ebc2fe.js"
+        "/packs/js/main-ffac5f9adcf6559076e6.js"
       ],
       "js.map": [
-        "/packs/js/main-794e94dd7e6f07ebc2fe.js.map"
+        "/packs/js/main-ffac5f9adcf6559076e6.js.map"
       ]
     }
   },
-  "main.js": "/packs/js/main-794e94dd7e6f07ebc2fe.js",
-  "main.js.map": "/packs/js/main-794e94dd7e6f07ebc2fe.js.map"
+  "main.js": "/packs/js/main-ffac5f9adcf6559076e6.js",
+  "main.js.map": "/packs/js/main-ffac5f9adcf6559076e6.js.map"
 }

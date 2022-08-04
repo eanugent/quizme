@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   resources :app
   get 'app', to: 'app#index'
 
+  get 'welcome/audio', to: 'welcome#audio'
+
   resources :subjects, only: [:index, :show]
 
   namespace 'guess_subject' do

@@ -47,6 +47,14 @@ module PickSubject
 
         def add_player
             room = GameRoom.find_by_key(room_key_param)
+
+            unless room
+                return render json:
+                {
+                    status: :not_found
+                }
+            end
+
             player = Player.create(
                 game_room_id: room.id,
                 name: player_name_param,

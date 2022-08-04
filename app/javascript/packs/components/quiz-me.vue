@@ -1,5 +1,27 @@
 <template>
-    <v-container>      
+    <v-container>
+      <audio ref="audioElm" src="/welcome/audio?id=31ljk23tjkl235l"></audio>
+      <v-row>
+        <v-col>
+          <v-icon
+            v-if="gameStatus!='mode_selection'"
+            class="mb-3"
+            @click="backToHome()"
+          >
+            mdi-home
+          </v-icon>
+            <div
+              v-if="this.gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+            >
+              <v-btn
+                color="primary"
+                @click="startNewGame()"
+              >
+                Play Again!
+              </v-btn>
+            </div>
+          </v-col>
+      </v-row>
       <v-row>
         <v-col xs="12">
 
@@ -32,11 +54,18 @@
                 Joining Friends?
               </v-card-title>
               <v-card-text>
+                <span
+                  v-if="roomKeyInvalid"
+                  class="red--text"
+                >
+                  Expired or invalid room key
+                </span>
                 <v-text-field
                   v-model="roomKey"
                   label="Room Key"
                   hint="NOT case sensitive"
                   outlined
+                  counter
                   maxlength="4"
                   >
                 </v-text-field>
@@ -51,6 +80,7 @@
                 </v-text-field>
                 <v-btn
                   color="primary"
+                  :disabled="!this.roomKey || !this.playerName"
                   @click="joinRoom()"
                 >
                   Join Private Room
@@ -117,11 +147,11 @@
               <v-card-text>
                 <v-list>
                   <v-list-item
-                    v-for="(player, index) in roomPlayers"
+                    v-for="(player) in roomPlayers"
                     :key="player.id"
                   >
                     <v-list-item-content>
-                      <v-list-item-title>{{ index+1 }} {{ player.name }}</v-list-item-title>
+                      <v-list-item-title>{{ player.name }}</v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                 </v-list>
@@ -181,7 +211,7 @@
             :class="`mb-6 ${myTurn ? 'white--text' : ''}`">
             <v-card-title
             >
-              {{ myTurn ? 'My' : `${this.roomMyTurnPlayerName}'s` }} Turn
+              {{ myTurn ? 'Your' : `${this.roomMyTurnPlayerName}'s` }} Turn
             </v-card-title>
           </v-card>
 
@@ -345,19 +375,39 @@
                   </div>                  
                 </v-card-text>
                 </div>
-              </v-expand-transition> 
+              </v-expand-transition>
+
+              <v-card-actions
+                v-if="isMultiPlayer"
+              >
+                <v-btn
+                  color="orange lighten-2"
+                  text
+                  @click="showPlayers = !showPlayers"
+                >
+                  Players
+                  <v-icon>{{ showPlayers ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                </v-btn>
+              </v-card-actions>
+
+              <v-expand-transition
+                v-if="isMultiPlayer"
+              >
+                <div v-show="showPlayers">
+                  <v-divider></v-divider>
+                <v-card-text>
+                  <div
+                    v-for="player in roomPlayers"
+                    :key="player.id"
+                    :class="`mb-4 ${player.is_connected ? '' : 'grey--text'}`"
+                    >
+                    {{ player.name }}: {{ player.score }}
+                  </div>                  
+                </v-card-text>
+                </div>
+              </v-expand-transition>
             </v-card>
-          </div>
-        <div
-          v-if="this.gameStatus == 'complete' && (!isMultiPlayer || sRoomHost)"
-        >
-          <v-btn
-            color="success"
-            @click="startNewGame()"
-          >
-            Play Again!
-          </v-btn>
-        </div>
+          </div>        
         </v-col>
       </v-row>
     </v-container>
@@ -375,6 +425,7 @@ export default {
     gameId: null,
     isMultiPlayer: false,
     roomKey: '',
+    roomKeyInvalid: false,
     roomId: null,
     roomScoreToWin: '3',
     roomHostName: '',
@@ -390,6 +441,7 @@ export default {
     message: '',
     question_options: [],
     showCharacters: false,
+    showPlayers: false,
     characters: [],
     guessedCharacterIds: [],
     correctCharacterId: -1,
@@ -439,22 +491,34 @@ export default {
     }
   },
   methods: {
-    joinRoom() {      
+    backToHome() {
+      this.playerName = '';
+      this.roomKey = '';
+      this.gameStatus='mode_selection';
+    },
+    joinRoom() {
+      this.roomKeyInvalid = false;
       axios.
         post('/pick_subject/game_rooms/add_player/',
         {
           room_key: this.roomKey,
           player_name: this.playerName
         }).then(response => {
-            const data = response.data.data;
-            this.playerId = data.player_id;
-            this.isMultiPlayer = true;
+            if(response.data.status === "not_found") {
+              this.roomKeyInvalid = true;
+              this.roomKey = '';
+            }
+            else {
+              const data = response.data.data;
+              this.playerId = data.player_id;
+              this.isMultiPlayer = true;
 
-            this.$cable.subscribe({
-              channel: "GameChannel",
-              room_key: this.roomKey,
-              player_id: this.playerId
-            });
+              this.$cable.subscribe({
+                channel: "GameChannel",
+                room_key: this.roomKey,
+                player_id: this.playerId
+              });
+            }
         });
     },
     reportConnected() {
@@ -527,6 +591,8 @@ export default {
       }
     },
     startNewGame() {
+      this.$refs.audioElm.play();
+      
       this.$cable.perform({
         channel: "GameChannel",
         action: "start_new_game"

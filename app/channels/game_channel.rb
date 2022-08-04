@@ -95,6 +95,11 @@ class GameChannel < ApplicationCable::Channel
     game = room.current_game
     answer_val = game.process_guess(subject.id)
 
+    if(answer_val == 1) 
+      player.score += 1;
+      player.save
+    end
+
     room.increment_my_turn_player_id
 
     response_json = {

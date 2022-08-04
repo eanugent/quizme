@@ -2,7 +2,7 @@
   <v-app id="app">
     <v-app-bar app dark class="indigo">
       <v-toolbar-title class="headline text-uppercase">
-        <span>Quiz Me &nbsp;</span>          
+        <span>Quiz Me &nbsp;</span>
       </v-toolbar-title>
     </v-app-bar>
     <v-main>
