@@ -1,6 +1,14 @@
 <template>
     <v-container>
-      <audio ref="audioElm" src="/welcome/audio?id=31ljk23tjkl235l" loop></audio>
+      <audio
+        ref="audioElm"
+        preload="auto"
+        loop>
+        <source
+          :src="audioSrc"
+          type="audio/mpeg"
+        />
+      </audio>
       <v-row>
         <v-col>
           <v-icon
@@ -490,6 +498,11 @@ export default {
     }
   },
   computed: {
+    audioSrc(){
+      console.log(window.location.protocol);
+      console.log(window.location.host);
+      return `${window.location.protocol}//${window.location.host}/welcome/audio?id=31ljk23tjkl235l`;
+    },
     myTurn() {
       return this.roomMyTurnPlayerId == this.playerId;
     },
@@ -581,7 +594,7 @@ export default {
         });
     },
     refreshRoom(data) {
-      if (this.gameId != data.game_id) {
+      if (data.game_id && this.gameId != data.game_id) {
         this.initForNewGame();
         this.gameId = data.game_id;
       }
@@ -686,7 +699,7 @@ export default {
             }
             this.processing = false;
           },
-        1000
+        !this.isMultiPlayer || this.myTurn ? 1000 : 2000
         );
     },
     disableOtherQuestions(questionId){
@@ -774,7 +787,7 @@ export default {
     initForNewGame() {
       this.$refs.audioElm.currentTime = 0;
       this.$refs.audioElm.play();
-console.log('i am here');
+
       this.message = '';
       this.headerColor = 'white';
       this.askedQuestions = [];
