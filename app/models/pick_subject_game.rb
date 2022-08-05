@@ -162,7 +162,7 @@ class PickSubjectGame < ApplicationRecord
     end
     
     def next_yes_question_id
-        subject.answers.where(question_id: remaining_question_ids, answer_val: 1).
+        Answer.where(question_id: remaining_yes_question_ids, subject_id: remaining_subject_ids).
             group(:question_id, :answer_val).
             count.
             group_by{|k,v| k[0]}.
@@ -187,7 +187,7 @@ class PickSubjectGame < ApplicationRecord
                 h[k][index2] = v[3]
                 h[k][index3] = v[5]
             end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-            sort_by{ |k,v| v }.first[0]
+            sort_by{ |k,v| v }.first&.first
     end
 
     def next_question_scores
@@ -238,6 +238,14 @@ class PickSubjectGame < ApplicationRecord
 
     def remaining_question_ids
         questions_query.where.not(id: self.asked_question_ids).pluck(:id)
+    end
+
+    def remaining_yes_question_ids
+        questions_query.where.not(id: self.asked_question_ids).pluck(:id).intersection(yes_question_ids)
+    end
+
+    def yes_question_ids
+        @yes_question_ids ||= subject.answers.where(answer_val: 1).pluck(:question_id)
     end
 
     def print_remaining_subjects
