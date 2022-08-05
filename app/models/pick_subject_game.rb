@@ -107,8 +107,12 @@ class PickSubjectGame < ApplicationRecord
     end
 
     def current_questions
+        opts = {1 => "Yes", 2 => "No", 3 => "Not Sure"}
         self.current_question_ids.map do |question_id|
             Question.find(question_id)
+            # q = Question.find(question_id)
+            # q.question += " #{opts[q.answers.where(subject_id: subject_id).first.answer_val]}"
+            # q
         end
     end
 
@@ -117,21 +121,39 @@ class PickSubjectGame < ApplicationRecord
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
-                scores = next_question_scores
-                threshhold_size = next_question_scores_threshhold_size
+                yes_ans, no_ans =
+                    subject.answers.select{|a| remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}.
+                        partition {|a| a.answer_val == 1}
 
-                best_cutoff_index = threshhold_size - 1
-                worst_cutoff_index = scores.count - threshhold_size
+                ids = [
+                    yes_ans.sample&.question_id,
+                    no_ans.sample&.question_id
+                ].compact
 
-                best_question_index = rand(0..best_cutoff_index)
-                random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
-                worst_question_index = rand(worst_cutoff_index..scores.count-1)
+                while ids.count < 3
+                    id_to_try = remaining_question_ids.sample
+                    unless ids.include?(id_to_try)
+                        ids << id_to_try
+                    end
+                end
+
+                ids.shuffle
+
+                # scores = next_question_scores
+                # threshhold_size = next_question_scores_threshhold_size(scores.count)
+
+                # best_cutoff_index = threshhold_size - 1
+                # worst_cutoff_index = scores.count - threshhold_size
+
+                # best_question_index = rand(0..best_cutoff_index)
+                # random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
+                # worst_question_index = rand(worst_cutoff_index..scores.count-1)
                 
-                [
-                    scores[best_question_index][0],
-                    scores[random_question_index][0],
-                    scores[worst_question_index][0]
-                ].shuffle
+                # [
+                #     scores[best_question_index][0],
+                #     scores[random_question_index][0],
+                #     scores[worst_question_index][0]
+                # ].shuffle
             end
     end
 
@@ -168,8 +190,7 @@ class PickSubjectGame < ApplicationRecord
             sort_by{ |k,v| v }
     end
 
-    def next_question_scores_threshhold_size
-        score_count = next_question_scores.count
+    def next_question_scores_threshhold_size(score_count)
         size = 6
         while score_count.to_f / size <= 2
             size -= 1

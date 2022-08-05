@@ -71,7 +71,9 @@ class GameChannel < ApplicationCable::Channel
     game = room.current_game
     answer_val = game.process_question(question.id)
 
-    room.increment_my_turn_player_id
+    unless answer_val == 1
+      room.increment_my_turn_player_id
+    end
 
     response_json = {
         type: 'question_processed',
