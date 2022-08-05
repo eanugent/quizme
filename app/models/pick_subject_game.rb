@@ -109,10 +109,10 @@ class PickSubjectGame < ApplicationRecord
     def current_questions
         opts = {1 => "Yes", 2 => "No", 3 => "Not Sure"}
         self.current_question_ids.map do |question_id|
-            Question.find(question_id)
-            # q = Question.find(question_id)
-            # q.question += " #{opts[q.answers.where(subject_id: subject_id).first.answer_val]}"
-            # q
+            #Question.find(question_id)
+            q = Question.find(question_id)
+            q.question += " #{opts[q.answers.where(subject_id: subject_id).first.answer_val]}"
+            q
         end
     end
 
@@ -121,12 +121,16 @@ class PickSubjectGame < ApplicationRecord
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
-                yes_ans, no_ans =
-                    subject.answers.select{|a| remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}.
-                        partition {|a| a.answer_val == 1}
+                # yes_ans, no_ans =
+                #     subject.answers.select{|a| remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}.
+                #         partition {|a| a.answer_val == 1}
+
+                no_ans =
+                    subject.answers.select{|a| a.answer_val == 2 && remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}
 
                 ids = [
-                    yes_ans.sample&.question_id,
+                    #yes_ans.sample&.question_id,
+                    next_yes_question_id,
                     no_ans.sample&.question_id
                 ].compact
 
@@ -155,6 +159,35 @@ class PickSubjectGame < ApplicationRecord
                 #     scores[worst_question_index][0]
                 # ].shuffle
             end
+    end
+    
+    def next_yes_question_id
+        subject.answers.where(question_id: remaining_question_ids, answer_val: 1).
+            group(:question_id, :answer_val).
+            count.
+            group_by{|k,v| k[0]}.
+            each_with_object({}) do |(k,v), h|
+                h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
+            end.each_with_object({}) do |(k,v), h|
+                h[k] = {}
+                index1 = v[0]
+                index2 = v[2]
+                index3 = v[4]
+
+                if index2 == 0
+                    index2 = (index1 % 3) + 1
+                    if index3 == 0
+                        index3 = (index2 % 3) + 1
+                    end
+                elsif index3 == 0
+                    index3 = [1,2,3].excluding([index1, index2])[0]
+                end
+
+                h[k][index1] = v[1]
+                h[k][index2] = v[3]
+                h[k][index3] = v[5]
+            end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
+            sort_by{ |k,v| v }.first[0]
     end
 
     def next_question_scores
