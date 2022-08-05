@@ -109,10 +109,10 @@ class PickSubjectGame < ApplicationRecord
     def current_questions
         opts = {1 => "Yes", 2 => "No", 3 => "Not Sure"}
         self.current_question_ids.map do |question_id|
-            #Question.find(question_id)
-            q = Question.find(question_id)
-            q.question += " #{opts[q.answers.where(subject_id: subject_id).first.answer_val]}"
-            q
+            Question.find(question_id)
+            # q = Question.find(question_id)
+            # q.question += " #{opts[q.answers.where(subject_id: subject_id).first.answer_val]}"
+            # q
         end
     end
 
