@@ -30,6 +30,13 @@ module PickSubject
             render json: { data: recent_games, status: :ok }
         end
 
+        def game_types
+            render json: {
+                data: Subject.distinct.pluck(:game_type),
+                status: :ok
+            }
+        end
+
         def process_question
             question = Question.find(question_id_param)
             answer_val = game.process_question(question.id)

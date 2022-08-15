@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_07_29_015426) do
+ActiveRecord::Schema.define(version: 2022_08_14_200219) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -32,6 +32,7 @@ ActiveRecord::Schema.define(version: 2022_07_29_015426) do
     t.uuid "host_player_id"
     t.uuid "my_turn_player_id"
     t.uuid "player_turn_order", default: [], array: true
+    t.integer "seconds_per_turn", default: 60
   end
 
   create_table "guess_subject_games", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -55,6 +56,8 @@ ActiveRecord::Schema.define(version: 2022_07_29_015426) do
     t.integer "guessed_subject_ids", default: [], array: true
     t.uuid "game_room_id"
     t.integer "current_question_ids", default: [], array: true
+    t.integer "subject_ids", default: [], array: true
+    t.integer "expired_turn_count", default: 0
   end
 
   create_table "players", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

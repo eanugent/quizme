@@ -19,6 +19,7 @@ module PickSubject
                 room_key: room_key,
                 game_type: game_type_param,
                 score_to_win: score_to_win_param,
+                seconds_per_turn: seconds_per_turn_param,
                 is_open: true
             )
 
@@ -72,20 +73,6 @@ module PickSubject
             }
         end
 
-        # def start_new_game
-        #     game = PickSubjectGame.create(
-        #         game_type: room.game_type,
-        #         game_room_id: id_param
-        #     )
-            
-        #     broadcast_room_change
-        # end
-
-        # def player_connected
-        #     @room_id = player.game_room_id
-        #     broadcast_room_change
-        # end
-
         private
 
         def id_param
@@ -102,6 +89,10 @@ module PickSubject
 
         def score_to_win_param
             params.require(:score_to_win)
+        end
+
+        def seconds_per_turn_param
+            params.require(:seconds_per_turn)
         end
 
         def player_name_param

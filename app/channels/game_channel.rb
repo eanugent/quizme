@@ -12,15 +12,6 @@ class GameChannel < ApplicationCable::Channel
     player.is_connected = true
     player.save
 
-    msg_json =
-    {
-      type: "new_subscriber",
-      data: {
-        name: player.name,
-        avatar_id: player.avatar_id
-      }
-    }
-
     stream_for room
   end
 
@@ -56,6 +47,7 @@ class GameChannel < ApplicationCable::Channel
         game_room_id: room.id
     )
 
+    room.player_turn_order = room.player_turn_order.shuffle
     room.my_turn_player_id = room.player_turn_order[0]
     room.save
 
@@ -75,7 +67,7 @@ class GameChannel < ApplicationCable::Channel
       room.increment_my_turn_player_id
     end
 
-    response_json = {
+    response_data = {
         type: 'question_processed',
         game_status: game.status,
         answer_val: answer_val,
@@ -87,7 +79,7 @@ class GameChannel < ApplicationCable::Channel
         my_turn_player_name: room.my_turn_player_name
     }
 
-    GameChannel.broadcast_to(room, response_json)
+    GameChannel.broadcast_to(room, response_data)
   end
 
   def process_guess(data)
@@ -102,9 +94,11 @@ class GameChannel < ApplicationCable::Channel
       player.save
     end
 
-    room.increment_my_turn_player_id
+    unless game.status == 'complete'
+      room.increment_my_turn_player_id
+    end
 
-    response_json = {
+    response_data = {
         type: 'guess_processed',
         guessed_subject_id: subject.id,
         name: subject.name,
@@ -115,7 +109,30 @@ class GameChannel < ApplicationCable::Channel
         my_turn_player_name: room.my_turn_player_name
     }
 
-    GameChannel.broadcast_to(room, response_json)
+    GameChannel.broadcast_to(room, response_data)
+  end
+
+  def process_expired_turn()
+    room.reload
+    game = room.current_game
+    return unless game
+
+    expired_turns = game.process_expired_turn
+    
+    unless game.status == 'complete'
+      room.increment_my_turn_player_id
+    end
+
+    response_data = {
+      type: 'turn_expired',
+      expired_turn_count: game.expired_turn_count,
+      game_status: game.status,
+      correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
+      my_turn_player_id: room.my_turn_player_id,
+      my_turn_player_name: room.my_turn_player_name
+    }
+      
+    GameChannel.broadcast_to(room, response_data)    
   end
 
   private

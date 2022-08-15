@@ -18,23 +18,23 @@
           >
             mdi-home
           </v-icon>
-          <v-icon
+          <!-- <v-icon
             v-if="gameStatus!='mode_selection'"
             class="mb-3"
             @click="toggleAudio()"
           >
             mdi-volume-off
-          </v-icon>
-            <div
-              v-if="this.gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+          </v-icon> -->
+          <div
+            v-if="this.gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+          >
+            <v-btn
+              color="primary"
+              @click="startNewGame()"
             >
-              <v-btn
-                color="primary"
-                @click="startNewGame()"
-              >
-                Play Again!
-              </v-btn>
-            </div>
+              Play Again!
+            </v-btn>
+          </div>
           </v-col>
       </v-row>
       <v-row>
@@ -50,13 +50,15 @@
                 Wanna give it a shot alone?
               </v-card-title>
               <v-card-text>
-                <!-- <v-select
+                <v-select
+                  v-if="gameTypes.length > 1"
                   v-model="roomGameType"
                   :items="gameTypes"
                   label="Game Type"
-                ></v-select> -->
+                ></v-select>
                 <v-btn
                   color="primary"
+                  :disabled="!roomGameType"
                   @click="startSoloGame()"
                 >
                   Play Solo
@@ -121,17 +123,24 @@
           <!-- Room Setup card -->
           <v-card v-if="this.gameStatus == 'setup_room'" class="pa-3">
             <v-card-text>
-                    <!-- <v-select
+                    <v-select
+                      v-if="gameTypes.length > 1"
                       v-model="roomGameType"
                       :items="gameTypes"
                       label="Game Type"
-                    ></v-select> -->
+                    ></v-select>
                     <v-text-field
                       v-model="playerName"
                       hint="Doesn't have to be your real name"
                       label="Your Display Name"
                       counter
                       maxLength="20"
+                    >
+                    </v-text-field>
+                    <v-text-field
+                      v-model="secondsPerTurn"
+                      label="Seconds Per Turn"
+                      maxLength="3"
                     >
                     </v-text-field>
                     <!-- <v-text-field
@@ -143,6 +152,7 @@
 
               <v-btn
                 color="primary"
+                :disabled="!roomGameType"
                 @click="startMulti()"
               >
                 Open Room
@@ -202,10 +212,10 @@
               </h3>
               <p>You can see this list again by clicking "Take a Guess"</p>
               <div
-                v-for="character in characters"
-                :key="character.name"
+                v-for="subject in subjects"
+                :key="subject.name"
                 >
-                {{ character.name }}
+                {{ subject.name }}
               </div> 
               
               <div class="mt-6">
@@ -227,6 +237,10 @@
             <v-card-title
             >
               {{ myTurn ? 'Your' : `${this.roomMyTurnPlayerName}'s` }} Turn
+              <v-progress-linear
+                color="indigo"
+                :value="(turnSecondsLeft / secondsPerTurn) * 100"
+              ></v-progress-linear>
             </v-card-title>
           </v-card>
 
@@ -265,7 +279,7 @@
                 v-if="gameStatus=='in_progress'"
               >
                 <div
-                  v-if="askedQuestions.length+1 < maxQuestions"
+                  v-if="questionsLeft > 1"
                 >
                   <v-card-text
                     v-for="(question, index) in this.question_options"
@@ -293,7 +307,7 @@
                 </div> -->
               </div>
               <div
-                v-else-if="guessedCharacterIds.includes(correctCharacterId)"
+                v-else-if="guessedSubjectIds.includes(correctSubjectId)"
               >
                 <h2>
                   <span
@@ -356,38 +370,49 @@
                 <v-btn
                   color="orange lighten-2"
                   text
-                  @click="showCharacters = !showCharacters"
+                  @click="showSubjects = !showSubjects"
                 >
                   Take a guess
-                  <v-icon>{{ showCharacters ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                  <v-icon>{{ showSubjects ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
                 </v-btn>
               </v-card-actions>
 
               <v-expand-transition>
-                <div v-show="showCharacters">
+                <div v-show="showSubjects">
                   <v-divider></v-divider>
                 <v-card-text>
-                  <div
-                    v-for="character in characters"
-                    :key="character.name"
-                    class="mb-4"
+                  <v-container
+                    align="center"
+                    no-gutters
+                  >
+                    <v-row
+                      v-for="row in subjectRows"
+                      :key="subjectRows.indexOf(row)"
                     >
-                    <h3
-                      v-if="correctCharacterId == character.id"
-                      class="green lighten-3 white--text pa-3"
-                    >
-                      {{ character.name }}
-                    </h3>
-                    <v-btn
-                      v-else
-                      color="orange"
-                      small
-                      :disabled="guessedCharacterIds.includes(character.id) || gameStatus != 'in_progress'"
-                      @click="makeGuess(character.id, character.name)"
-                    >
-                      {{ character.name }}
-                    </v-btn>
-                  </div>                  
+                      <v-col
+                        v-for="subject in row"
+                        :style="`max-width:${(1/subjectsPerRow)*100}%`"
+                        :key="subject.id"
+                      >
+                        <h3
+                          v-if="correctSubjectId == subject.id"
+                          class="green lighten-3 white--text pa-3"
+                        >
+                          {{ subject.name }}
+                        </h3>
+                        <v-btn
+                          v-else
+                          color="orange"
+                          :x-small="screenIsSuperSmall"
+                          :small="!screenIsSuperSmall"
+                          :disabled="guessedSubjectIds.includes(subject.id) || gameStatus != 'in_progress'"
+                          @click="makeGuess(subject.id, subject.name)"
+                        >
+                          {{ subject.name }}
+                        </v-btn>
+                      </v-col>                      
+                    </v-row>
+                  </v-container>              
                 </v-card-text>
                 </div>
               </v-expand-transition>
@@ -434,14 +459,18 @@ import axios from "axios";
 export default {
   data: () => ({
     maxQuestions: 10,
-    gameTypes: ['Bible Characters'],
-    roomGameType: 'Bible Characters',
+    gameTypes: [],
+    roomGameType: '',
     gameStatus: 'mode_selection',
     gameId: null,
     isMultiPlayer: false,
     roomKey: '',
     roomKeyInvalid: false,
     roomId: null,
+    secondsPerTurn: 60,
+    turnInterval: null,
+    turnSecondsLeft: 60.0,
+    expiredTurns: 0,
     roomScoreToWin: '3',
     roomHostName: '',
     isRoomHost: false,
@@ -455,11 +484,12 @@ export default {
     answerValText: ['Yes', 'No', 'Not sure'],
     message: '',
     question_options: [],
-    showCharacters: false,
+    showSubjects: false,
     showPlayers: false,
-    characters: [],
-    guessedCharacterIds: [],
-    correctCharacterId: -1,
+    subjects: [],
+    //subjectsPerRow: 2,
+    guessedSubjectIds: [],
+    correctSubjectId: -1,
     showAskedQuestions: false,
     askedQuestions: [],
     processing: false,
@@ -468,9 +498,12 @@ export default {
   }),
   created: function () {
     axios
-      .get("/subjects?game_type=Bible Characters")
+      .get("/pick_subject/game_types")
       .then(response => {
-        this.characters = response.data.data;
+        this.gameTypes = response.data.data;
+        if (this.gameTypes.length == 1){
+          this.roomGameType = this.gameTypes[0];
+        }
       });
   },
   channels: {
@@ -490,6 +523,9 @@ export default {
           case 'game_room_change':
             this.refreshRoom(data);
             break;
+          case 'turn_expired':
+            this.turnExpiredProcessed(data);
+            break;
           default:
             break;
         }
@@ -507,7 +543,28 @@ export default {
       return this.roomMyTurnPlayerId == this.playerId;
     },
     questionsLeft() {
-      return this.maxQuestions - this.askedQuestions.length;
+      return this.maxQuestions - this.askedQuestions.length - this.expiredTurns;
+    },
+    subjectRows() {
+      const rows = [];
+      var cells = [];
+      this.subjects.forEach((subject, index) => {
+        if(index % this.subjectsPerRow == 0){
+          cells = [];
+          rows.push(cells);
+        }
+        cells.push(subject);
+      });
+      return rows;
+    },
+    subjectsPerRow() {
+      return this.screenIsSmall ? 2 : 3;
+    },
+    screenIsSuperSmall(){
+      return window.innerWidth < 500;
+    },
+    screenIsSmall(){
+      return window.innerWidth < 800;
     }
   },
   methods: {
@@ -577,7 +634,8 @@ export default {
         {
           game_type: this.roomGameType,
           player_name: this.playerName,
-          score_to_win: this.roomScoreToWin
+          score_to_win: this.roomScoreToWin,
+          seconds_per_turn: this.secondsPerTurn
         })
         .then(response => {
           const data = response.data.data;
@@ -594,15 +652,19 @@ export default {
         });
     },
     refreshRoom(data) {
-      if (data.game_id && this.gameId != data.game_id) {
+      if (data.game_id && this.gameId != data.game_id) { // New Game
         this.initForNewGame();
         this.gameId = data.game_id;
+        this.subjects = data.subjects;
+        this.secondsPerTurn = data.seconds_per_turn;
+        this.setTimerToNext();
       }
 
       this.roomPlayers = data.players;
       this.roomHostName = data.host_player_name;
       this.roomMyTurnPlayerId = data.my_turn_player_id;
       this.roomMyTurnPlayerName = data.my_turn_player_name;
+      this.expiredTurns = data.expired_turn_count;
       
       if(data.game_status) {
         this.gameStatus = data.game_status;
@@ -622,31 +684,12 @@ export default {
     },
     startNewGame() {
       this.$refs.currentTime = 0;
-      this.$refs.audioElm.play();
+      //this.$refs.audioElm.play();
 
       this.$cable.perform({
         channel: "GameChannel",
         action: "start_new_game"
       });
-    },
-    startGame() {
-      axios
-        .post("/pick_subject/games", 
-        {
-          game_type: "Bible Characters",
-          room_id: this.roomId,
-          player_id: this.playerId
-        })
-        .then(response => {
-          const data = response.data.data;
-          this.gameId = data.game_id;
-
-          this.question_options = data.next_question_options;
-          this.gameStatus = data.game_status;
-        })
-        .catch(e => {
-          console.log(e);
-        });
     },
     selectQuestion(index) {
       if(!this.myTurn){
@@ -656,6 +699,8 @@ export default {
 
       if(this.processing) return;
       this.processing = true;
+      clearInterval(this.turnInterval);
+
       const question = this.question_options[index];
       this.disableOtherQuestions(question.id);
 
@@ -687,11 +732,7 @@ export default {
           {
             this.gameStatus = data.game_status;
             if(this.gameStatus == 'complete') {
-              this.$refs.audioElm.pause();
-              this.correctCharacterId = data.correct_subject_id;
-              const character = this.characters.find(c => c.id == data.correct_subject_id);
-              this.message = `It was ${character.name}`;
-              this.headerColor = this.answerValBgColors[1];
+              this.endGameWithoutSuccess(data.correct_subject_id);
             }
             else{
               this.message = '';
@@ -699,6 +740,7 @@ export default {
               this.question_options = data.next_question_options;
               this.roomMyTurnPlayerId = data.my_turn_player_id;
               this.roomMyTurnPlayerName = data.my_turn_player_name;
+              this.setTimerToNext();
             }
             this.processing = false;
           },
@@ -719,20 +761,23 @@ export default {
       }
 
       if(this.processing) return;
-        this.processing = true;
-        this.guessedCharacterIds.push(subjectId);
 
-        this.$cable.perform({
-          channel: "GameChannel",
-          action: "process_guess",
-          data: {
-            subject_id: subjectId
-          },
-        });
+      clearInterval(this.turnInterval);
+
+      this.processing = true;
+      this.guessedSubjectIds.push(subjectId);
+
+      this.$cable.perform({
+        channel: "GameChannel",
+        action: "process_guess",
+        data: {
+          subject_id: subjectId
+        },
+      });
     },
     guessProcessed(data) {
       this.gameStatus = data.game_status;
-      this.correctCharacterId = data.correct_subject_id
+      this.correctSubjectId = data.correct_subject_id
 
       if(data.answer_val == 1){
         this.$refs.audioElm.pause();
@@ -747,17 +792,14 @@ export default {
         () =>
           {
             if(this.gameStatus == 'complete'){
-              this.$refs.audioElm.pause();
-              this.correctCharacterId = data.correct_subject_id;
-              const character = this.characters.find(c => c.id == data.correct_subject_id);
-              this.message = `It was ${character.name}`;
-              this.headerColor = 'red';
+              this.endGameWithoutSuccess(data.correct_subject_id);
             }
             else{
               this.message = '';
               this.headerColor = 'white';
               this.roomMyTurnPlayerId = data.my_turn_player_id;
               this.roomMyTurnPlayerName = data.my_turn_player_name;
+              this.setTimerToNext();
             }
             this.processing = false;
           },
@@ -775,6 +817,42 @@ export default {
       this.askedQuestions.push(questionLog);
       this.guess = {};
     },
+    reportTurnExpired() {
+      this.$cable.perform({
+        channel: "GameChannel",
+        action: "process_expired_turn",
+      });
+    },
+    turnExpiredProcessed(data){
+      this.gameStatus = data.game_status;
+      this.expiredTurns = data.expired_turn_count;
+
+      if(this.gameStatus == 'complete'){
+        this.endGameWithoutSuccess(data.correct_subject_id);
+      }
+      else{
+        this.message = '';
+        this.headerColor = 'white';
+        this.roomMyTurnPlayerId = data.my_turn_player_id;
+        this.roomMyTurnPlayerName = data.my_turn_player_name;
+        this.setTimerToNext();
+      }
+    },
+    setTimerToNext() {
+      if(!this.isMultiPlayer) return;
+
+      this.turnSecondsLeft = this.secondsPerTurn;
+      if(this.turnInterval) {
+        clearInterval(this.turnInterval);
+      }
+
+      this.turnInterval = setInterval(() => {
+        this.turnSecondsLeft -= .1;
+        if (this.myTurn && this.turnSecondsLeft <= 0) {
+          this.reportTurnExpired();
+        }
+      }, 100)
+    },
     warnNotMyTurn() {
       this.message = `It's ${this.roomMyTurnPlayerName}'s Turn`;
         this.headerColor = 'red';
@@ -787,17 +865,26 @@ export default {
         2000
         );
     },
+    endGameWithoutSuccess(correctSubjectId) {
+      clearInterval(this.turnInterval);
+      this.$refs.audioElm.pause();
+      this.correctSubjectId = correctSubjectId;
+      const subject = this.subjects.find(c => c.id == correctSubjectId);
+      this.message = `It was ${subject.name}`;
+      this.headerColor = 'red';
+    },
     initForNewGame() {
       if(this.$refs.audioElm.paused){
         this.$refs.audioElm.currentTime = 0;
-        this.$refs.audioElm.play();
+        //this.$refs.audioElm.play();
       }
 
       this.message = '';
       this.headerColor = 'white';
       this.askedQuestions = [];
-      this.guessedCharacterIds = [];
-      this.correctCharacterId = -1;
+      this.guessedSubjectIds = [];
+      this.correctSubjectId = -1;
+      this.expiredTurns = 0;
     }
   }
 };

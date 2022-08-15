@@ -10,12 +10,15 @@ class GameRoom < ApplicationRecord
         {
             host_player_id: host_player_id,
             host_player_name: host_player_name,
+            seconds_per_turn: seconds_per_turn,
             my_turn_player_id: my_turn_player_id,
             my_turn_player_name: my_turn_player_name,
             players: players,
             game_id: current_game&.id,
             game_status: current_game&.status,
-            current_questions: current_game&.current_questions
+            current_questions: current_game&.current_questions,
+            subjects: current_game&.subjects,
+            expired_turn_count: current_game&.expired_turn_count
         }
     end
 

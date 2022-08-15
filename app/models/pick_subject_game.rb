@@ -6,14 +6,12 @@ class PickSubjectGame < ApplicationRecord
 
     before_create do |game|
         if self.subject_id.nil?
-            self.subject_id = Subject.pluck(:id).sample
-        end
-
-        if self.remaining_subject_ids.empty?
-            self.remaining_subject_ids = Subject.where(game_type: game_type).pluck(:id)
+            self.subject_ids = Subject.where(game_type: game_type).pluck(:id).sample(20)
+            self.subject_id = self.subject_ids.sample
+            self.remaining_subject_ids = self.subject_ids
             self.update_current_question_ids
         end
-    end
+   end
 
     def self.run(game_type = "Bible Characters")
         old_logger = ActiveRecord::Base.logger
@@ -54,13 +52,19 @@ class PickSubjectGame < ApplicationRecord
         end
     end
 
+    def subjects
+        self.subject_ids.map do |id|
+            Subject.find(id)
+        end
+    end
+
     def process_question(question_id)
-        return -1 if self.asked_question_ids.include?(question_id)
+        return -1 if self.asked_question_ids.include?(question_id)        
         self.asked_question_ids << question_id
 
         answer_val = self.subject.answers.where(question_id: question_id).first&.answer_val
 
-        unless answer_val == 3
+        if [1,2].include?(answer_val)
             wrong_answer_val = answer_val == 1 ? 2 : 1
             ids_to_remove =
                 Answer.
@@ -100,8 +104,16 @@ class PickSubjectGame < ApplicationRecord
         end
     end
 
+    def process_expired_turn
+        self.expired_turn_count += 1
+        check_question_guess_count
+        save
+    end
+
     def check_question_guess_count
-        if self.guessed_subject_ids.count + self.asked_question_ids.count >= 10
+        if self.guessed_subject_ids.count +
+           self.asked_question_ids.count +
+           self.expired_turn_count >= MAX_QUESTIONS
             self.status = 'complete'
         end
     end
@@ -241,7 +253,7 @@ class PickSubjectGame < ApplicationRecord
     end
 
     def remaining_yes_question_ids
-        questions_query.where.not(id: self.asked_question_ids).pluck(:id).intersection(yes_question_ids)
+        remaining_question_ids.intersection(yes_question_ids)
     end
 
     def yes_question_ids
