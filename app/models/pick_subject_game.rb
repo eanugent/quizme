@@ -133,15 +133,10 @@ class PickSubjectGame < ApplicationRecord
             if self.remaining_question_ids.count < 3
                 self.remaining_question_ids.shuffle
             else
-                # yes_ans, no_ans =
-                #     subject.answers.select{|a| remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}.
-                #         partition {|a| a.answer_val == 1}
-
                 no_ans =
                     subject.answers.select{|a| a.answer_val == 2 && remaining_question_ids.include?(a.question_id) && [1,2].include?(a.answer_val)}
 
                 ids = [
-                    #yes_ans.sample&.question_id,
                     next_yes_question_id,
                     no_ans.sample&.question_id
                 ].compact
@@ -154,88 +149,43 @@ class PickSubjectGame < ApplicationRecord
                 end
 
                 ids.shuffle
-
-                # scores = next_question_scores
-                # threshhold_size = next_question_scores_threshhold_size(scores.count)
-
-                # best_cutoff_index = threshhold_size - 1
-                # worst_cutoff_index = scores.count - threshhold_size
-
-                # best_question_index = rand(0..best_cutoff_index)
-                # random_question_index = rand(best_cutoff_index+1..worst_cutoff_index-1) 
-                # worst_question_index = rand(worst_cutoff_index..scores.count-1)
-                
-                # [
-                #     scores[best_question_index][0],
-                #     scores[random_question_index][0],
-                #     scores[worst_question_index][0]
-                # ].shuffle
             end
     end
     
     def next_yes_question_id
-        Answer.where(question_id: remaining_yes_question_ids, subject_id: remaining_subject_ids).
-            group(:question_id, :answer_val).
-            count.
-            group_by{|k,v| k[0]}.
-            each_with_object({}) do |(k,v), h|
-                h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
-            end.each_with_object({}) do |(k,v), h|
-                h[k] = {}
-                index1 = v[0]
-                index2 = v[2]
-                index3 = v[4]
+        yes_id_scores =
+            Answer.where(question_id: remaining_yes_question_ids, subject_id: remaining_subject_ids).
+                group(:question_id, :answer_val).
+                count.
+                group_by{|k,v| k[0]}.
+                each_with_object({}) do |(k,v), h|
+                    h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
+                end.each_with_object({}) do |(k,v), h|
+                    h[k] = {}
+                    index1 = v[0]
+                    index2 = v[2]
+                    index3 = v[4]
 
-                if index2 == 0
-                    index2 = (index1 % 3) + 1
-                    if index3 == 0
-                        index3 = (index2 % 3) + 1
+                    if index2 == 0
+                        index2 = (index1 % 3) + 1
+                        if index3 == 0
+                            index3 = (index2 % 3) + 1
+                        end
+                    elsif index3 == 0
+                        index3 = [1,2,3].excluding([index1, index2])[0]
                     end
-                elsif index3 == 0
-                    index3 = [1,2,3].excluding([index1, index2])[0]
-                end
 
-                h[k][index1] = v[1]
-                h[k][index2] = v[3]
-                h[k][index3] = v[5]
-            end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-            sort_by{ |k,v| v }.first&.first
+                    h[k][index1] = v[1]
+                    h[k][index2] = v[3]
+                    h[k][index3] = v[5]
+                end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
+                sort_by{ |k,v| v }
+        
+        threshhold = next_yes_question_scores_threshhold_size(yes_id_scores.count)
+        yes_id_scores.take(threshhold).sample.first        
     end
 
-    def next_question_scores
-        # The best next question is the question with the lowest value of
-        # ABS(yes_answer_subjects - no_answer_subjects) + unknown_answer_subjects
-        # This returns all options sorted in ascending order
-
-        Answer.where(question_id: remaining_question_ids, subject_id: self.remaining_subject_ids).
-            group(:question_id, :answer_val).
-            count.
-            group_by{|k,v| k[0]}.
-            each_with_object({}) do |(k,v), h|
-                h[k] = v.flatten.values_at(1,2,4,5,7,8).map{|x| x || 0}
-            end.each_with_object({}) do |(k,v), h|
-                h[k] = {}
-                index1 = v[0]
-                index2 = v[2]
-                index3 = v[4]
-
-                if index2 == 0
-                    index2 = (index1 % 3) + 1
-                    if index3 == 0
-                        index3 = (index2 % 3) + 1
-                    end
-                elsif index3 == 0
-                    index3 = [1,2,3].excluding([index1, index2])[0]
-                end
-
-                h[k][index1] = v[1]
-                h[k][index2] = v[3]
-                h[k][index3] = v[5]
-            end.to_a.to_h{|x| [x[0], ( (x[1][1] || 0) - (x[1][2] || 0) ).abs + (x[1][3] || 0)] }.
-            sort_by{ |k,v| v }
-    end
-
-    def next_question_scores_threshhold_size(score_count)
+    def next_yes_question_scores_threshhold_size(score_count)
         size = 6
         while score_count.to_f / size <= 2
             size -= 1
