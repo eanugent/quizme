@@ -780,10 +780,7 @@ export default {
       this.correctSubjectId = data.correct_subject_id
 
       if(data.answer_val == 1){
-        this.$refs.audioElm.pause();
-        this.message = `${data.name} is the right answer!`
-        this.headerColor = this.answerValBgColors[0];
-        this.processing = false;
+        this.endGameWithSuccess(data);
       }
       else if(data.answer_val == 2){
         this.message = `Not ${data.name}`;
@@ -872,6 +869,14 @@ export default {
       const subject = this.subjects.find(c => c.id == correctSubjectId);
       this.message = `It was ${subject.name}`;
       this.headerColor = 'red';
+    },
+    endGameWithSuccess(data) {
+      this.$refs.audioElm.pause();
+      this.message = `${data.name} is the right answer!`;
+      this.headerColor = this.answerValBgColors[0];
+      const winningPlayer = this.roomPlayers.find(p => p.id == data.my_turn_player_id);
+      winningPlayer.score++;
+      this.processing = false;
     },
     initForNewGame() {
       if(this.$refs.audioElm.paused){

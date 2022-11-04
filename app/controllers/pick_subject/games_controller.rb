@@ -37,50 +37,6 @@ module PickSubject
             }
         end
 
-        def process_question
-            question = Question.find(question_id_param)
-            answer_val = game.process_question(question.id)
-
-            response_json = {
-                type: 'question_processed',
-                game_status: game.status,
-                answer_val: answer_val,
-                next_question_options: next_question_options,
-                correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
-                question: question.question,
-                question_id: question.id
-            }
-
-            GameChannel.broadcast_to(game.game_room, response_json)
-
-            render json:
-            {
-                status: :ok,
-                message: nil
-            }
-        end
-
-        def process_guess
-            subject = Subject.find(subject_id_param)
-            answer_val = game.process_guess(subject.id)
-
-            response_json = {
-                type: 'guess_processed',
-                name: subject.name,
-                game_status: game.status,
-                answer_val: answer_val,
-                correct_subject_id: game.status == 'complete' ? game.subject_id : -1
-            }
-
-            GameChannel.broadcast_to(game.game_room, response_json)
-
-            render json:
-            {
-                status: :ok,
-                message: nil
-            }
-        end
-
         private
 
         def id_param
@@ -89,14 +45,6 @@ module PickSubject
 
         def game_type_param
             params.require(:game_type)
-        end
-
-        def question_id_param
-            params.require(:question_id).to_i
-        end
-
-        def subject_id_param
-            params.require(:subject_id).to_i
         end
 
         def game
