@@ -17,7 +17,7 @@ class GameRoom < ApplicationRecord
             game_id: current_game&.id,
             game_status: current_game&.status,
             current_questions: current_game&.current_questions,
-            subjects: current_game&.subjects,
+            subjects: current_game&.subjects&.sort_by {|s| s.name },
             expired_turn_count: current_game&.expired_turn_count
         }
     end
