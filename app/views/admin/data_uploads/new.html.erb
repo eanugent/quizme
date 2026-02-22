@@ -1,0 +1,21 @@
+<h1>Admin Data Upload</h1>
+
+<% if flash[:notice] %>
+  <div style="color: green;"><%= flash[:notice] %></div>
+<% end %>
+
+<% if flash[:error] %>
+  <div style="color: red;"><%= flash[:error] %></div>
+<% end %>
+
+<p>Upload a CSV file to update the quiz data. <strong>Warning:</strong> This will overwrite data for the Game Types included in the CSV.</p>
+
+<%= form_with url: admin_data_uploads_path, local: true, multipart: true do |form| %>
+  <div>
+    <%= form.label :csv_file, "Select CSV File" %>
+    <%= form.file_field :csv_file, accept: '.csv' %>
+  </div>
+  <div style="margin-top: 20px;">
+    <%= form.submit "Upload and Update Data" %>
+  </div>
+<% end %>

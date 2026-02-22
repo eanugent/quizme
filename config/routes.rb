@@ -7,6 +7,10 @@ Rails.application.routes.draw do
 
   resources :subjects, only: [:index, :show]
 
+  namespace :admin do
+    resources :data_uploads, only: [:new, :create]
+  end
+
   namespace 'guess_subject' do
     resources :games, only: [:index, :show, :create]
     post 'games/:id/next_question', to: 'games#next_question'
