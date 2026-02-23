@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Required for Webpack 4 compatibility with Node 17+
+export NODE_OPTIONS=--openssl-legacy-provider
+
+exec rails server "$@"
