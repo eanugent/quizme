@@ -13,7 +13,7 @@ Id,Game Type,Question,Yes Count,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Pete
 13,Bible Characters,Did this person have a dream or vision from God,12,2,2,1,2,2,2,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,1,1,1,2,1,2,2,1,1,2,2
 14,Bible Characters,Did this person have a famous child,10,2,2,2,2,2,2,2,1,2,1,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,1,1,2,2,2,2,2,2,2,2,2
 15,Bible Characters,Did this person live only in the new testament,13,2,2,1,2,2,1,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1,2,1,2,1,2,2,2,1,2,2,2,2,2,1,2,1,2,2,1
-16,Bible Characters,Was this person alive during Jesus’ earthly life,17,1,2,1,1,1,1,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1,1,1,2,1,2,2,2,1,2,2,2,2,2,1,2,1,2,2,1
+16,Bible Characters,Was this person alive during Jesus’ earthly life,17,1,2,1,1,2,1,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,2,1,1,1,2,1,2,2,2,1,2,2,2,2,2,1,2,1,2,2,1
 17,Bible Characters,Was this person named by God,7,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,1,2,2,2,2,2,2,1,2,2,2
 18,Bible Characters,Is this person a female,9,2,1,2,2,2,2,2,2,2,1,2,2,2,2,1,2,2,2,1,2,2,2,1,2,2,1,2,2,1,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2
 19,Bible Characters,Did this person write any part of the Bible,12,1,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,1,2,1,2,1,1,1,2,2,2,2,2,2,2,2,1,2,2,2,1,2,2
@@ -23,7 +23,7 @@ Id,Game Type,Question,Yes Count,_Moses,_Esther,_Paul,_Jesus,_Elijah,_Judas,_Pete
 23,Bible Characters,Did this person ever go in the temple in Jerusalem,16,2,2,1,1,3,1,1,2,2,2,2,2,2,2,1,2,2,2,2,2,2,3,2,1,2,2,2,2,2,1,2,1,1,1,1,1,1,1,2,3,2,2,2,2,1,3,2,3,3,2,1
 24,Bible Characters,Was this person ever rich in their lifetime,18,1,2,2,2,2,3,2,1,2,2,2,2,2,2,2,2,1,1,1,1,2,1,2,1,2,2,1,2,2,1,2,2,2,2,2,2,1,1,1,2,1,1,2,2,2,1,1,2,2,1,3
 25,Bible Characters,Did this person kill anyone,14,1,2,2,2,2,2,2,1,1,2,2,2,1,1,2,1,1,1,2,2,1,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,1,2,2,1,2,2,1,2
-26,Bible Characters,Did this person die a voilent death,19,2,2,1,1,1,1,1,2,1,2,2,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,1,1,2,1,2,2,2,1,2,3,2,1,2,2,2,2,2,1,2,3,1,1,1,1,2
+26,Bible Characters,Did this person die a voilent death,19,2,2,1,1,2,1,1,2,1,2,2,2,1,2,2,2,1,1,2,2,2,2,2,2,2,2,1,1,2,1,2,2,2,1,2,3,2,1,2,2,2,2,2,1,2,3,1,1,1,1,2
 27,Bible Characters,Did Jesus talk about this person,18,1,2,2,1,1,1,1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1,1,1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,1,2,2,1,2,2,2,2,2,2,1,1
 28,Bible Characters,Did this person see an angel,14,1,2,2,1,2,2,1,1,2,1,2,2,2,1,1,1,2,2,2,2,2,2,1,2,2,1,2,1,2,2,2,2,2,2,2,2,2,2,1,2,2,1,3,2,2,2,2,2,1,2,2
 29,Bible Characters,Did this person see any miracles,30,1,2,1,1,1,1,1,1,2,2,2,2,2,1,1,1,2,1,2,2,1,2,2,3,2,2,1,2,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,2,2,1,1,3,1,2,1
