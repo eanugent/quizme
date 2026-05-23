@@ -1,456 +1,441 @@
 <template>
-    <v-container>
-      <audio
-        ref="audioElm"
-        preload="auto"
-        loop>
-        <source
-          :src="audioSrc"
-          type="audio/mpeg"
-        />
-      </audio>
-      <v-row>
-        <v-col>
-          <v-icon
-            v-if="gameStatus!='mode_selection'"
-            class="mb-3"
-            @click="backToHome()"
+  <div>
+    <audio
+      ref="audioElm"
+      preload="auto"
+      loop>
+      <source
+        :src="audioSrc"
+        type="audio/mpeg"
+      />
+    </audio>
+
+    <!-- Top toolbar: back button + play again -->
+    <div
+      v-if="gameStatus != 'mode_selection'"
+      class="qm-toolbar"
+    >
+      <v-btn
+        class="qm-back-btn"
+        depressed
+        small
+        @click="backToHome()"
+      >
+        <v-icon left small>mdi-home-outline</v-icon>
+        Home
+      </v-btn>
+
+      <v-btn
+        v-if="gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+        class="qm-btn qm-btn-primary"
+        depressed
+        @click="startNewGame()"
+      >
+        <v-icon left>mdi-replay</v-icon>
+        Play Again
+      </v-btn>
+    </div>
+
+    <!-- ============================== Mode Selection ============================== -->
+    <div v-if="gameStatus == 'mode_selection'">
+      <div class="qm-hero">
+        <span class="qm-eyebrow">Bible Characters &middot; 10 Questions or Less</span>
+        <h1 class="qm-title">Can I read <em>your mind</em>?</h1>
+        <p class="qm-subtitle">
+          I'm thinking of a Bible character. Pick a mode below and let's see if you can figure out who I have in mind&mdash;solo, with friends, or hosting your own private room.
+        </p>
+      </div>
+
+      <v-card class="qm-card qm-interactive mb-5">
+        <div class="qm-mode-card-head">
+          <span class="qm-mode-icon"><v-icon color="#facc15">mdi-account-circle-outline</v-icon></span>
+          <div>
+            <div class="qm-mode-title">Play Solo</div>
+            <div class="qm-mode-sub">Quick session against the puzzle</div>
+          </div>
+        </div>
+        <v-card-text>
+          <v-select
+            v-if="gameTypes.length > 1"
+            v-model="roomGameType"
+            :items="gameTypes"
+            label="Game Type"
+            outlined
+            dense
+            dark
+          ></v-select>
+          <v-btn
+            class="qm-btn qm-btn-primary qm-btn-block"
+            depressed
+            :disabled="!roomGameType"
+            @click="startSoloGame()"
           >
-            mdi-home
-          </v-icon>
-          <!-- <v-icon
-            v-if="gameStatus!='mode_selection'"
-            class="mb-3"
-            @click="toggleAudio()"
+            Start Solo Game
+            <v-icon right>mdi-arrow-right</v-icon>
+          </v-btn>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="qm-card qm-interactive qm-anim-2 mb-5">
+        <div class="qm-mode-card-head">
+          <span class="qm-mode-icon"><v-icon color="#a78bfa">mdi-account-group-outline</v-icon></span>
+          <div>
+            <div class="qm-mode-title">Join Friends</div>
+            <div class="qm-mode-sub">Hop into someone&apos;s private room</div>
+          </div>
+        </div>
+        <v-card-text>
+          <div v-if="roomKeyInvalid" class="qm-error-pill">
+            <v-icon small color="#fecaca">mdi-alert-circle-outline</v-icon>
+            Expired or invalid room key
+          </div>
+          <v-text-field
+            v-model="roomKey"
+            label="Room Key"
+            hint="Not case sensitive"
+            outlined
+            counter
+            maxlength="4"
+            dark
+          ></v-text-field>
+          <v-text-field
+            v-model="playerName"
+            hint="Doesn't have to be your real name"
+            label="Your Display Name"
+            outlined
+            counter
+            maxlength="20"
+            dark
+          ></v-text-field>
+          <v-btn
+            class="qm-btn qm-btn-primary qm-btn-block"
+            depressed
+            :disabled="!roomKey || !playerName"
+            @click="joinRoom()"
           >
-            mdi-volume-off
-          </v-icon> -->
-          <div
-            v-if="this.gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+            Join Private Room
+            <v-icon right>mdi-login</v-icon>
+          </v-btn>
+        </v-card-text>
+      </v-card>
+
+      <v-card class="qm-card qm-interactive qm-anim-3">
+        <div class="qm-mode-card-head">
+          <span class="qm-mode-icon"><v-icon color="#f472b6">mdi-party-popper</v-icon></span>
+          <div>
+            <div class="qm-mode-title">Host a Party</div>
+            <div class="qm-mode-sub">Create a private room and invite friends</div>
+          </div>
+        </div>
+        <v-card-text>
+          <v-btn
+            class="qm-btn qm-btn-ghost qm-btn-block"
+            depressed
+            @click="setupRoom()"
           >
-            <v-btn
-              color="primary"
-              @click="startNewGame()"
+            Create a Private Room
+            <v-icon right>mdi-arrow-top-right</v-icon>
+          </v-btn>
+        </v-card-text>
+      </v-card>
+    </div>
+
+    <!-- ============================== Setup Room ============================== -->
+    <v-card v-if="gameStatus == 'setup_room'" class="qm-card">
+      <v-card-title>Set up your room</v-card-title>
+      <v-card-text>
+        <v-select
+          v-if="gameTypes.length > 1"
+          v-model="roomGameType"
+          :items="gameTypes"
+          label="Game Type"
+          outlined
+          dense
+          dark
+        ></v-select>
+        <v-text-field
+          v-model="playerName"
+          hint="Doesn't have to be your real name"
+          label="Your Display Name"
+          outlined
+          counter
+          maxLength="20"
+          dark
+        ></v-text-field>
+        <v-text-field
+          v-model="secondsPerTurn"
+          label="Seconds Per Turn"
+          maxLength="3"
+          outlined
+          dark
+        ></v-text-field>
+        <v-btn
+          class="qm-btn qm-btn-primary qm-btn-block"
+          depressed
+          :disabled="!roomGameType"
+          @click="startMulti()"
+        >
+          Open Room
+          <v-icon right>mdi-key-variant</v-icon>
+        </v-btn>
+      </v-card-text>
+    </v-card>
+
+    <!-- ============================== Waiting for Players ============================== -->
+    <div v-if="gameStatus == 'waiting_for_players'">
+      <div class="qm-hero">
+        <span class="qm-eyebrow">Private Room</span>
+        <h1 class="qm-title">{{ roomHostName || 'Host' }}<em>'s Lobby</em></h1>
+        <p class="qm-subtitle">Share this key with anyone you want to play with.</p>
+      </div>
+
+      <div class="qm-room-key">
+        <small>Room Key</small>
+        <strong>{{ roomKey }}</strong>
+      </div>
+
+      <v-card class="qm-card mb-5">
+        <v-card-subtitle>Connected Players &middot; {{ roomPlayers.length }}</v-card-subtitle>
+        <v-card-text>
+          <div class="qm-roster">
+            <div
+              v-for="player in roomPlayers"
+              :key="player.id"
+              class="qm-roster-item"
             >
-              Play Again!
-            </v-btn>
+              <span class="qm-player-avatar">{{ playerInitial(player.name) }}</span>
+              <span class="qm-player-name">{{ player.name }}</span>
+            </div>
           </div>
-          </v-col>
-      </v-row>
-      <v-row>
-        <v-col xs="12">
+        </v-card-text>
+      </v-card>
 
-          <!-- Mode Selection div-->
-          <div v-if="this.gameStatus == 'mode_selection'" class="pa-3">
-            <h1>
-              Welcome to Quiz Me!
-            </h1>
-            <v-card class="my-6 py-3">
-              <v-card-title>
-                Wanna give it a shot alone?
-              </v-card-title>
-              <v-card-text>
-                <v-select
-                  v-if="gameTypes.length > 1"
-                  v-model="roomGameType"
-                  :items="gameTypes"
-                  label="Game Type"
-                ></v-select>
-                <v-btn
-                  color="primary"
-                  :disabled="!roomGameType"
-                  @click="startSoloGame()"
-                >
-                  Play Solo
-                </v-btn>
-              </v-card-text>
-            </v-card>
+      <v-btn
+        v-if="isRoomHost"
+        class="qm-btn qm-btn-primary qm-btn-block"
+        depressed
+        @click="startNewGame()"
+      >
+        Start the Game
+        <v-icon right>mdi-play</v-icon>
+      </v-btn>
+    </div>
 
-            <v-card class="my-6 py-3">
-              <v-card-title>
-                Joining Friends?
-              </v-card-title>
-              <v-card-text>
-                <span
-                  v-if="roomKeyInvalid"
-                  class="red--text"
-                >
-                  Expired or invalid room key
-                </span>
-                <v-text-field
-                  v-model="roomKey"
-                  label="Room Key"
-                  hint="NOT case sensitive"
-                  outlined
-                  counter
-                  maxlength="4"
-                  >
-                </v-text-field>
-                <v-text-field
-                  v-model="playerName"
-                  hint="Doesn't have to be your real name"
-                  label="Your Display Name"
-                  outlined
-                  counter
-                  maxlength="20"
-                  >
-                </v-text-field>
-                <v-btn
-                  color="primary"
-                  :disabled="!this.roomKey || !this.playerName"
-                  @click="joinRoom()"
-                >
-                  Join Private Room
-                </v-btn>
-              </v-card-text>
-            </v-card>
+    <!-- ============================== Intro ============================== -->
+    <v-card v-if="gameStatus == 'intro'" class="qm-card">
+      <v-card-title>Can you read my mind?</v-card-title>
+      <v-card-text>
+        <p>
+          I'm thinking of a Bible character from the list below.
+          Can you guess who it is in <strong style="color:var(--qm-gold)">{{ maxQuestions }} questions or less</strong>?
+          When you're ready I'll give you 3 questions to choose from&mdash;pick the one that helps narrow things down.
+          Tap <em>Past Questions</em> to review what you've asked. Tap <em>Take a Guess</em> to view the character list.
+          Heads up: guesses count as questions, so use them carefully!
+        </p>
 
-            <v-card class="my-6 py-3">
-              <v-card-title>
-                Ready to Start a Party?
-              </v-card-title>
-              <v-card-text>
-                <v-btn
-                  color="primary"
-                  @click="setupRoom()"
-                >
-                  Create a Private Room
-                </v-btn>
-              </v-card-text>
-            </v-card>
-          </div>
+        <h3 style="font-family:'Fraunces',serif; font-weight:600; margin: 22px 0 10px; color: var(--qm-text);">
+          Character List
+        </h3>
+        <div class="qm-intro-subjects">
+          <span v-for="subject in subjects" :key="subject.name">{{ subject.name }}</span>
+        </div>
 
-          <!-- Room Setup card -->
-          <v-card v-if="this.gameStatus == 'setup_room'" class="pa-3">
-            <v-card-text>
-                    <v-select
-                      v-if="gameTypes.length > 1"
-                      v-model="roomGameType"
-                      :items="gameTypes"
-                      label="Game Type"
-                    ></v-select>
-                    <v-text-field
-                      v-model="playerName"
-                      hint="Doesn't have to be your real name"
-                      label="Your Display Name"
-                      counter
-                      maxLength="20"
-                    >
-                    </v-text-field>
-                    <v-text-field
-                      v-model="secondsPerTurn"
-                      label="Seconds Per Turn"
-                      maxLength="3"
-                    >
-                    </v-text-field>
-                    <!-- <v-text-field
-                      v-model="roomScoreToWin"
-                      hint="3 makes sense"
-                      label="Score to Win"
-                    >
-                    </v-text-field> -->
+        <v-btn
+          class="qm-btn qm-btn-primary qm-btn-block"
+          depressed
+          @click="startGame()"
+        >
+          Ready to Go
+          <v-icon right>mdi-arrow-right-circle</v-icon>
+        </v-btn>
+      </v-card-text>
+    </v-card>
 
-              <v-btn
-                color="primary"
-                :disabled="!roomGameType"
-                @click="startMulti()"
+    <!-- ============================== Game In Progress / Complete ============================== -->
+    <div v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1">
+
+      <!-- Multiplayer turn indicator -->
+      <div
+        v-if="isMultiPlayer && ['in_progress', 'complete'].indexOf(gameStatus) > -1"
+        :class="['qm-turn', myTurn ? 'qm-turn-mine' : '']"
+      >
+        <div class="qm-timer-ring" v-if="gameStatus == 'in_progress'">
+          <svg viewBox="0 0 56 56">
+            <circle class="qm-timer-track" cx="28" cy="28" r="24"></circle>
+            <circle
+              class="qm-timer-progress"
+              cx="28" cy="28" r="24"
+              :stroke-dasharray="timerCircumference"
+              :stroke-dashoffset="timerOffset"
+            ></circle>
+          </svg>
+          <span class="qm-timer-label">{{ Math.max(0, Math.ceil(turnSecondsLeft)) }}</span>
+        </div>
+        <div class="qm-turn-text">
+          <small>Currently</small>
+          {{ myTurn ? 'Your turn' : `${roomMyTurnPlayerName}'s turn` }}
+        </div>
+      </div>
+
+      <!-- Status banner -->
+      <v-card
+        flat
+        :class="['qm-status', statusClass, questionsLeftVariant]"
+      >
+        <span v-if="message">{{ message }}</span>
+        <span v-else-if="questionsLeft > 1" class="qm-questions-left">
+          <span class="qm-count">{{ questionsLeft }}</span>
+          <span>questions left</span>
+        </span>
+        <span v-else>Time to take a guess!</span>
+      </v-card>
+
+      <!-- Main game card -->
+      <v-card class="qm-card">
+        <!-- Question Options -->
+        <div v-if="gameStatus == 'in_progress' && questionsLeft > 1">
+          <v-card-subtitle>Pick one question</v-card-subtitle>
+          <div class="qm-section-body">
+            <div class="qm-questions">
+              <button
+                v-for="(question, index) in question_options"
+                :key="question.id"
+                :class="['qm-question-tile', question.disabled ? 'qm-q-disabled' : '']"
+                :disabled="question.disabled"
+                @click="selectQuestion(index)"
               >
-                Open Room
-              </v-btn>
-            </v-card-text>
-          </v-card>
-
-          <!-- Waiting for Players card-->
-          <div v-if="this.gameStatus == 'waiting_for_players'" class="pa-3">
-            <h1>Welcome to {{ this.roomHostName || 'Host' }}'s Private Room</h1>
-
-            <h3 class="mb-6">Game Key: {{ this.roomKey }}</h3>
-            <v-card class="mb-6">
-              <v-card-subtitle>
-                Connected Players
-              </v-card-subtitle>
-              <v-card-text>
-                <v-list>
-                  <v-list-item
-                    v-for="(player) in roomPlayers"
-                    :key="player.id"
-                  >
-                    <v-list-item-content>
-                      <v-list-item-title>{{ player.name }}</v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
-              </v-card-text>
-            </v-card>
-
-            <v-btn
-              v-if="isRoomHost"
-              color="primary"
-              @click="startNewGame()"
-            >
-              Start Game
-            </v-btn>                
+                <span class="qm-q-num">{{ index + 1 }}</span>
+                <span>{{ question.question }}?</span>
+              </button>
+            </div>
           </div>
-          <!-- Intro Card -->
-          <v-card v-if="this.gameStatus == 'intro'" class="pa-3">
-            <v-card-title>
-              Can you read my mind?
-            </v-card-title>
+        </div>
 
-            <v-card-text>
-              <p>
-                I'm thinking of a Bible character from the list below.
-                Can you guess who it is in <strong>{{ maxQuestions }} questions or less</strong>?
-                After you click "READY TO GO!" below, I'll give you 3 questions to choose from. Choose the
-                question that will best help you figure out my character. Click "PAST QUESTIONS" to view
-                questions you've previously asked. Click "TAKE A GUESS" to view the character list. When
-                you think you've figured me out, click on the character to see if you've figured me out. Guesses count as 
-                questions so use them carefully!
-              </p>
-              <h3>
-                Character List
-              </h3>
-              <p>You can see this list again by clicking "Take a Guess"</p>
-              <div
-                v-for="subject in subjects"
-                :key="subject.name"
-                >
-                {{ subject.name }}
-              </div> 
-              
-              <div class="mt-6">
-                <v-btn
-                  color="success"
-                  @click="startGame()"
-                >
-                  Ready to Go!
-                </v-btn>
+        <!-- Win/Lose celebration -->
+        <div
+          v-else-if="gameStatus == 'complete' && guessedSubjectIds.includes(correctSubjectId)"
+          class="qm-result"
+        >
+          <div class="qm-confetti">
+            <span v-if="askedQuestions.length / maxQuestions > 0.8">{{ '\u{1F60C}' }}</span>
+            <span v-else-if="askedQuestions.length / maxQuestions > 0.5">{{ '\u{1F44F}' }}</span>
+            <span v-else>{{ '\u{1F31F}' }}</span>
+          </div>
+          <h2 v-if="askedQuestions.length / maxQuestions > 0.8">
+            Whew! Just made it in {{askedQuestions.length}} questions.
+          </h2>
+          <h2 v-else-if="askedQuestions.length / maxQuestions > 0.5">
+            {{askedQuestions.length}} questions&mdash;not bad at all.
+          </h2>
+          <h2 v-else>
+            Unbelievable! Only {{askedQuestions.length}} questions?!
+          </h2>
+        </div>
+
+        <!-- Past Questions -->
+        <div class="qm-section">
+          <v-btn
+            class="qm-section-toggle"
+            depressed
+            @click="showAskedQuestions = !showAskedQuestions"
+          >
+            <span class="qm-section-label">
+              <span class="qm-section-icon"><v-icon small>mdi-history</v-icon></span>
+              Past Questions
+              <span style="color: var(--qm-text-muted); font-weight:400; margin-left: 4px;">({{ askedQuestions.length }})</span>
+            </span>
+            <v-icon>{{ showAskedQuestions ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+          </v-btn>
+          <v-expand-transition>
+            <div v-show="showAskedQuestions" class="qm-section-body">
+              <div class="qm-log-legend">
+                <span class="qm-dot yes">Yes</span>
+                <span class="qm-dot no">No</span>
+                <span class="qm-dot maybe">Not sure</span>
               </div>
-            </v-card-text>           
-          </v-card>
-          
-          <!-- Multiplayer Header Card-->
-          <v-card
-            v-if="isMultiPlayer && ['in_progress', 'complete'].indexOf(gameStatus) > -1"
-            :color="myTurn ? 'green' : 'white'"
-            :class="`mb-6 ${myTurn ? 'white--text' : ''}`">
-            <v-card-title
-            >
-              {{ myTurn ? 'Your' : `${this.roomMyTurnPlayerName}'s` }} Turn
-              <v-progress-linear
-                color="indigo"
-                :value="(turnSecondsLeft / secondsPerTurn) * 100"
-              ></v-progress-linear>
-            </v-card-title>
-          </v-card>
-
-          <!-- Header/Message Card-->
-          <v-card
-            v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1"
-            :color="headerColor"
-            :class="`game-header mb-6 ${message ? 'white--text' : ''}`"
-          >
-            <v-card-title>
-              <span
-                v-if="message"
-              >
-                {{ message }}
-              </span>
-              <span
-                v-else-if="questionsLeft > 1"
-                :class="questionsLeft > 4 ? 'black--text' : 'red--text'"
-              >
-                {{ questionsLeft }} Questions Left
-              </span>
-              <span
-                v-else
-              >
-                Time to take a guess!
-              </span>
-            </v-card-title>
-          </v-card>
-
-          <!-- Game Div -->
-          <div v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1">
-
-            <!-- Question Area -->
-            <v-card class="mb-6 pa-5">
-              <div
-                v-if="gameStatus=='in_progress'"
-              >
+              <div class="qm-log">
                 <div
-                  v-if="questionsLeft > 1"
+                  v-for="question in askedQuestions"
+                  :key="question.id"
+                  :class="['qm-log-item', `qm-log-${logVariant(question.color)}`]"
                 >
-                  <v-card-text
-                    v-for="(question, index) in this.question_options"
-                    :key="question.id"
-                  >                
-                    <v-card
-                      :color="question.disabled ? 'grey' : 'indigo'"
-                      :disabled="question.disabled"
-                      @click="selectQuestion(index)"
-                    >
-                      <v-card-text
-                        class="white--text"
-                      >
-                        {{ question.question }}?
-                      </v-card-text>
-                    </v-card>
-                  </v-card-text>
+                  <span class="qm-log-marker"></span>
+                  <span>{{ question.text }}?</span>
                 </div>
-                <!-- <div
-                  v-else
-                >
-                  <h2>
-                    Time to take a guess below!
-                  </h2>
-                </div> -->
+                <div v-if="!askedQuestions.length" style="color: var(--qm-text-muted); padding: 4px 0;">
+                  No questions asked yet.
+                </div>
               </div>
-              <div
-                v-else-if="guessedSubjectIds.includes(correctSubjectId)"
-              >
-                <h2>
-                  <span
-                    v-if="askedQuestions.length / maxQuestions > .8"
-                  >
-                    Whew! Just made it in {{askedQuestions.length}} questions!
-                  </span>
-                  <span
-                    v-else-if="askedQuestions.length / maxQuestions > .5"
-                    >
-                    {{askedQuestions.length}} questions, not bad.
-                  </span>
-                  <span
-                    v-else
-                  >
-                    Unbelievable! Only {{askedQuestions.length}} questions?!?! Amazing!
-                  </span>
-                </h2>
-              </div>
-              
+            </div>
+          </v-expand-transition>
+        </div>
 
-              <v-card-actions>
-                <v-btn
-                  color="orange lighten-2"
-                  text
-                  @click="showAskedQuestions = !showAskedQuestions"
+        <!-- Take a Guess (subject grid) -->
+        <div class="qm-section">
+          <v-btn
+            class="qm-section-toggle"
+            depressed
+            @click="showSubjects = !showSubjects"
+          >
+            <span class="qm-section-label">
+              <span class="qm-section-icon"><v-icon small>mdi-target</v-icon></span>
+              Take a Guess
+            </span>
+            <v-icon>{{ showSubjects ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+          </v-btn>
+          <v-expand-transition>
+            <div v-show="showSubjects" class="qm-section-body">
+              <div class="qm-subjects">
+                <button
+                  v-for="subject in subjects"
+                  :key="subject.id"
+                  :class="['qm-subject', correctSubjectId == subject.id ? 'qm-subject-correct' : '']"
+                  :disabled="correctSubjectId != subject.id && (guessedSubjectIds.includes(subject.id) || gameStatus != 'in_progress')"
+                  @click="correctSubjectId == subject.id ? null : makeGuess(subject.id, subject.name)"
                 >
-                  Past Questions
-                  <v-icon>{{ showAskedQuestions ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                </v-btn>
-              </v-card-actions>
+                  {{ subject.name }}
+                </button>
+              </div>
+            </div>
+          </v-expand-transition>
+        </div>
 
-              <v-expand-transition>
-                <div v-show="showAskedQuestions">
-                  <v-divider></v-divider>
-                  <v-card-subtitle>
-                    <span class="green--text">
-                      Yes
-                    </span> |
-                    <span class="red--text">
-                      No
-                    </span> |
-                    <span class="amber--text">
-                      Not sure
-                    </span>
-                </v-card-subtitle>
-                <v-card-text>
-                  <div
-                    v-for="question in this.askedQuestions"
-                    :key="question.id"
-                    :class="`${question.color}--text`"
-                  >
-                    {{ question.text }}?
+        <!-- Players (multiplayer) -->
+        <div v-if="isMultiPlayer" class="qm-section">
+          <v-btn
+            class="qm-section-toggle"
+            depressed
+            @click="showPlayers = !showPlayers"
+          >
+            <span class="qm-section-label">
+              <span class="qm-section-icon"><v-icon small>mdi-account-group</v-icon></span>
+              Players
+              <span style="color: var(--qm-text-muted); font-weight:400; margin-left: 4px;">({{ roomPlayers.length }})</span>
+            </span>
+            <v-icon>{{ showPlayers ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+          </v-btn>
+          <v-expand-transition>
+            <div v-show="showPlayers" class="qm-section-body">
+              <div class="qm-players">
+                <div
+                  v-for="player in roomPlayers"
+                  :key="player.id"
+                  :class="['qm-player-row', player.is_connected ? '' : 'qm-disconnected']"
+                >
+                  <span class="qm-player-avatar">{{ playerInitial(player.name) }}</span>
+                  <div style="flex:1;">
+                    <div class="qm-player-name">{{ player.name }}</div>
+                    <div class="qm-player-status" v-if="!player.is_connected">disconnected</div>
                   </div>
-                </v-card-text>
+                  <span class="qm-player-score">{{ player.score }}</span>
                 </div>
-              </v-expand-transition>
-              
-              <v-card-actions>
-                <v-btn
-                  color="orange lighten-2"
-                  text
-                  @click="showSubjects = !showSubjects"
-                >
-                  Take a guess
-                  <v-icon>{{ showSubjects ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                </v-btn>
-              </v-card-actions>
-
-              <v-expand-transition>
-                <div v-show="showSubjects">
-                  <v-divider></v-divider>
-                <v-card-text>
-                  <v-container
-                    align="center"
-                    no-gutters
-                  >
-                    <v-row
-                      v-for="row in subjectRows"
-                      :key="subjectRows.indexOf(row)"
-                    >
-                      <v-col
-                        v-for="subject in row"
-                        :style="`max-width:${(1/subjectsPerRow)*100}%`"
-                        :key="subject.id"
-                      >
-                        <h3
-                          v-if="correctSubjectId == subject.id"
-                          class="green lighten-3 white--text pa-3"
-                        >
-                          {{ subject.name }}
-                        </h3>
-                        <v-btn
-                          v-else
-                          color="orange"
-                          :x-small="screenIsSuperSmall"
-                          :small="!screenIsSuperSmall"
-                          :disabled="guessedSubjectIds.includes(subject.id) || gameStatus != 'in_progress'"
-                          @click="makeGuess(subject.id, subject.name)"
-                        >
-                          {{ subject.name }}
-                        </v-btn>
-                      </v-col>                      
-                    </v-row>
-                  </v-container>              
-                </v-card-text>
-                </div>
-              </v-expand-transition>
-
-              <v-card-actions
-                v-if="isMultiPlayer"
-              >
-                <v-btn
-                  color="orange lighten-2"
-                  text
-                  @click="showPlayers = !showPlayers"
-                >
-                  Players
-                  <v-icon>{{ showPlayers ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-                </v-btn>
-              </v-card-actions>
-
-              <v-expand-transition
-                v-if="isMultiPlayer"
-              >
-                <div v-show="showPlayers">
-                  <v-divider></v-divider>
-                <v-card-text>
-                  <div
-                    v-for="player in roomPlayers"
-                    :key="player.id"
-                    :class="`mb-4 ${player.is_connected ? '' : 'grey--text'}`"
-                    >
-                    {{ player.name }}: {{ player.score }}
-                  </div>                  
-                </v-card-text>
-                </div>
-              </v-expand-transition>
-            </v-card>
-          </div>        
-        </v-col>
-      </v-row>
-    </v-container>
+              </div>
+            </div>
+          </v-expand-transition>
+        </div>
+      </v-card>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -487,7 +472,6 @@ export default {
     showSubjects: false,
     showPlayers: false,
     subjects: [],
-    //subjectsPerRow: 2,
     guessedSubjectIds: [],
     correctSubjectId: -1,
     showAskedQuestions: false,
@@ -535,8 +519,6 @@ export default {
   },
   computed: {
     audioSrc(){
-      console.log(window.location.protocol);
-      console.log(window.location.host);
       return `${window.location.protocol}//${window.location.host}/welcome/audio?id=31ljk23tjkl235l`;
     },
     myTurn() {
@@ -545,29 +527,40 @@ export default {
     questionsLeft() {
       return this.maxQuestions - this.askedQuestions.length - this.expiredTurns;
     },
-    subjectRows() {
-      const rows = [];
-      var cells = [];
-      this.subjects.forEach((subject, index) => {
-        if(index % this.subjectsPerRow == 0){
-          cells = [];
-          rows.push(cells);
-        }
-        cells.push(subject);
-      });
-      return rows;
+    questionsLeftVariant() {
+      if (this.message) return '';
+      if (this.questionsLeft <= 2) return 'qm-danger';
+      if (this.questionsLeft <= 4) return 'qm-warn';
+      return '';
     },
-    subjectsPerRow() {
-      return this.screenIsSmall ? 2 : 3;
+    statusClass() {
+      if (!this.message) return '';
+      switch (this.headerColor) {
+        case 'green lighten-2': return 'qm-msg-yes';
+        case 'red lighten-1':   return 'qm-msg-no';
+        case 'amber lighten-2': return 'qm-msg-maybe';
+        case 'red':             return 'qm-msg-warn';
+        default: return '';
+      }
     },
-    screenIsSuperSmall(){
-      return window.innerWidth < 500;
+    timerCircumference() {
+      return 2 * Math.PI * 24;
     },
-    screenIsSmall(){
-      return window.innerWidth < 800;
+    timerOffset() {
+      const pct = Math.max(0, Math.min(1, this.turnSecondsLeft / this.secondsPerTurn));
+      return this.timerCircumference * (1 - pct);
     }
   },
   methods: {
+    playerInitial(name) {
+      if (!name) return '?';
+      return name.trim().charAt(0).toUpperCase();
+    },
+    logVariant(color) {
+      if (color === 'green') return 'yes';
+      if (color === 'red') return 'no';
+      return 'maybe';
+    },
     backToHome() {
       this.$refs.audioElm.pause();
 
@@ -652,7 +645,7 @@ export default {
         });
     },
     refreshRoom(data) {
-      if (data.game_id && this.gameId != data.game_id) { // New Game
+      if (data.game_id && this.gameId != data.game_id) {
         this.initForNewGame();
         this.gameId = data.game_id;
         this.subjects = data.subjects;
@@ -665,7 +658,7 @@ export default {
       this.roomMyTurnPlayerId = data.my_turn_player_id;
       this.roomMyTurnPlayerName = data.my_turn_player_name;
       this.expiredTurns = data.expired_turn_count;
-      
+
       if(data.game_status) {
         this.gameStatus = data.game_status;
       }
@@ -684,7 +677,6 @@ export default {
     },
     startNewGame() {
       this.$refs.currentTime = 0;
-      //this.$refs.audioElm.play();
 
       this.$cable.perform({
         channel: "GameChannel",
@@ -810,7 +802,7 @@ export default {
           id: -1 * data.guessed_subject_id,
           color: this.answerValTextColors[data.answer_val-1]
         };
-      
+
       this.askedQuestions.push(questionLog);
       this.guess = {};
     },
@@ -857,7 +849,7 @@ export default {
         () =>
           {
               this.message = '';
-              this.headerColor = 'white';            
+              this.headerColor = 'white';
           },
         2000
         );
@@ -881,7 +873,6 @@ export default {
     initForNewGame() {
       if(this.$refs.audioElm.paused){
         this.$refs.audioElm.currentTime = 0;
-        //this.$refs.audioElm.play();
       }
 
       this.message = '';
@@ -893,5 +884,4 @@ export default {
     }
   }
 };
-  
 </script>
