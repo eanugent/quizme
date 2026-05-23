@@ -2,6 +2,9 @@
 
 ENV["RAILS_ENV"] ||= ENV["RACK_ENV"] || "development"
 ENV["NODE_ENV"]  ||= "development"
+unless ENV["NODE_OPTIONS"]&.include?("openssl-legacy-provider")
+  ENV["NODE_OPTIONS"] = [ENV["NODE_OPTIONS"], "--openssl-legacy-provider"].compact.join(" ").strip
+end
 
 require "pathname"
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../../Gemfile",
