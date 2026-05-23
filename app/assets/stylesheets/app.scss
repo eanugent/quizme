@@ -994,6 +994,119 @@ body { overflow-x: hidden; }
   .qm-subjects { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ============================================================
+   Solo desktop board (large screens, no scrolling needed)
+   ============================================================ */
+@media (min-width: 1100px) {
+  body.qm-solo-wide .qm-shell {
+    max-width: 1280px;
+  }
+
+  body.qm-solo-wide .qm-game-board.v-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas:
+      "main guess"
+      "main log";
+    align-items: stretch;
+  }
+
+  body.qm-solo-wide .qm-zone-main {
+    grid-area: main;
+    border-right: 1px solid var(--qm-border);
+    padding: 4px 6px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  body.qm-solo-wide .qm-zone-main > div {
+    width: 100%;
+  }
+
+  body.qm-solo-wide .qm-zone-guess {
+    grid-area: guess;
+    border-bottom: 1px solid var(--qm-border);
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+  }
+
+  body.qm-solo-wide .qm-zone-log {
+    grid-area: log;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+  }
+
+  body.qm-solo-wide .qm-zone-guess .qm-section-toggle.v-btn,
+  body.qm-solo-wide .qm-zone-log .qm-section-toggle.v-btn {
+    pointer-events: none;
+    cursor: default;
+    height: 50px !important;
+  }
+  body.qm-solo-wide .qm-zone-guess .qm-section-toggle.v-btn:hover,
+  body.qm-solo-wide .qm-zone-log .qm-section-toggle.v-btn:hover {
+    background: transparent !important;
+  }
+  body.qm-solo-wide .qm-zone-guess .qm-section-toggle .v-btn__content > .v-icon:last-child,
+  body.qm-solo-wide .qm-zone-log .qm-section-toggle .v-btn__content > .v-icon:last-child {
+    display: none;
+  }
+
+  body.qm-solo-wide .qm-zone-guess .qm-section-body,
+  body.qm-solo-wide .qm-zone-log .qm-section-body {
+    padding-top: 0;
+  }
+
+  /* Compact subject grid in side panel so all names fit without scrolling */
+  body.qm-solo-wide .qm-zone-guess .qm-subjects {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 6px;
+  }
+  body.qm-solo-wide .qm-zone-guess .qm-subject {
+    padding: 8px 6px;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    border-radius: 9px;
+  }
+
+  /* Compact past-questions log */
+  body.qm-solo-wide .qm-zone-log .qm-log-legend {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+  body.qm-solo-wide .qm-zone-log .qm-log {
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  body.qm-solo-wide .qm-zone-log .qm-log-item {
+    padding: 7px 12px;
+    font-size: 0.85rem;
+  }
+  body.qm-solo-wide .qm-zone-log .qm-log-item .qm-log-marker {
+    margin-top: 6px;
+  }
+
+  /* Question tiles stay readable but a touch tighter */
+  body.qm-solo-wide .qm-zone-main .qm-question-tile {
+    padding: 18px 20px;
+    font-size: 1rem;
+  }
+  body.qm-solo-wide .qm-zone-main .qm-questions {
+    gap: 12px;
+  }
+
+  /* Status banner sits above the board */
+  body.qm-solo-wide .qm-status {
+    margin-bottom: 18px !important;
+  }
+}
+
 /* Vuetify overrides */
 .qm-app .v-divider { border-color: var(--qm-border) !important; }
 .qm-app .v-main { background: transparent !important; }

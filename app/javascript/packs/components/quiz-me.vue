@@ -291,49 +291,51 @@
       </v-card>
 
       <!-- Main game card -->
-      <v-card class="qm-card">
-        <!-- Question Options -->
-        <div v-if="gameStatus == 'in_progress' && questionsLeft > 1">
-          <v-card-subtitle>Pick one question</v-card-subtitle>
-          <div class="qm-section-body">
-            <div class="qm-questions">
-              <button
-                v-for="(question, index) in question_options"
-                :key="question.id"
-                :class="['qm-question-tile', question.disabled ? 'qm-q-disabled' : '']"
-                :disabled="question.disabled"
-                @click="selectQuestion(index)"
-              >
-                <span class="qm-q-num">{{ index + 1 }}</span>
-                <span>{{ question.question }}?</span>
-              </button>
+      <v-card class="qm-card qm-game-board">
+        <div class="qm-zone-main">
+          <!-- Question Options -->
+          <div v-if="gameStatus == 'in_progress' && questionsLeft > 1">
+            <v-card-subtitle>Pick one question</v-card-subtitle>
+            <div class="qm-section-body">
+              <div class="qm-questions">
+                <button
+                  v-for="(question, index) in question_options"
+                  :key="question.id"
+                  :class="['qm-question-tile', question.disabled ? 'qm-q-disabled' : '']"
+                  :disabled="question.disabled"
+                  @click="selectQuestion(index)"
+                >
+                  <span class="qm-q-num">{{ index + 1 }}</span>
+                  <span>{{ question.question }}?</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Win/Lose celebration -->
-        <div
-          v-else-if="gameStatus == 'complete' && guessedSubjectIds.includes(correctSubjectId)"
-          class="qm-result"
-        >
-          <div class="qm-confetti">
-            <span v-if="askedQuestions.length / maxQuestions > 0.8">{{ '\u{1F60C}' }}</span>
-            <span v-else-if="askedQuestions.length / maxQuestions > 0.5">{{ '\u{1F44F}' }}</span>
-            <span v-else>{{ '\u{1F31F}' }}</span>
+          <!-- Win/Lose celebration -->
+          <div
+            v-else-if="gameStatus == 'complete' && guessedSubjectIds.includes(correctSubjectId)"
+            class="qm-result"
+          >
+            <div class="qm-confetti">
+              <span v-if="askedQuestions.length / maxQuestions > 0.8">{{ '\u{1F60C}' }}</span>
+              <span v-else-if="askedQuestions.length / maxQuestions > 0.5">{{ '\u{1F44F}' }}</span>
+              <span v-else>{{ '\u{1F31F}' }}</span>
+            </div>
+            <h2 v-if="askedQuestions.length / maxQuestions > 0.8">
+              Whew! Just made it in {{askedQuestions.length}} questions.
+            </h2>
+            <h2 v-else-if="askedQuestions.length / maxQuestions > 0.5">
+              {{askedQuestions.length}} questions&mdash;not bad at all.
+            </h2>
+            <h2 v-else>
+              Unbelievable! Only {{askedQuestions.length}} questions?!
+            </h2>
           </div>
-          <h2 v-if="askedQuestions.length / maxQuestions > 0.8">
-            Whew! Just made it in {{askedQuestions.length}} questions.
-          </h2>
-          <h2 v-else-if="askedQuestions.length / maxQuestions > 0.5">
-            {{askedQuestions.length}} questions&mdash;not bad at all.
-          </h2>
-          <h2 v-else>
-            Unbelievable! Only {{askedQuestions.length}} questions?!
-          </h2>
         </div>
 
         <!-- Past Questions -->
-        <div class="qm-section">
+        <div class="qm-section qm-zone-log">
           <v-btn
             class="qm-section-toggle"
             depressed
@@ -347,7 +349,7 @@
             <v-icon>{{ showAskedQuestions ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
           </v-btn>
           <v-expand-transition>
-            <div v-show="showAskedQuestions" class="qm-section-body">
+            <div v-show="showAskedQuestions || forceExpandSections" class="qm-section-body">
               <div class="qm-log-legend">
                 <span class="qm-dot yes">Yes</span>
                 <span class="qm-dot no">No</span>
@@ -371,7 +373,7 @@
         </div>
 
         <!-- Take a Guess (subject grid) -->
-        <div class="qm-section">
+        <div class="qm-section qm-zone-guess">
           <v-btn
             class="qm-section-toggle"
             depressed
@@ -384,7 +386,7 @@
             <v-icon>{{ showSubjects ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
           </v-btn>
           <v-expand-transition>
-            <div v-show="showSubjects" class="qm-section-body">
+            <div v-show="showSubjects || forceExpandSections" class="qm-section-body">
               <div class="qm-subjects">
                 <button
                   v-for="subject in subjects"
@@ -478,7 +480,8 @@ export default {
     askedQuestions: [],
     processing: false,
     guess: {},
-    headerColor: 'white'
+    headerColor: 'white',
+    isWideViewport: typeof window !== 'undefined' && window.innerWidth >= 1100
   }),
   created: function () {
     axios
@@ -489,6 +492,24 @@ export default {
           this.roomGameType = this.gameTypes[0];
         }
       });
+  },
+  mounted() {
+    this.handleResize();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize);
+    document.body.classList.remove('qm-solo-wide');
+  },
+  watch: {
+    isSoloBoardWide: {
+      immediate: true,
+      handler(val) {
+        if (typeof document !== 'undefined') {
+          document.body.classList.toggle('qm-solo-wide', val);
+        }
+      }
+    }
   },
   channels: {
     GameChannel: {
@@ -549,9 +570,21 @@ export default {
     timerOffset() {
       const pct = Math.max(0, Math.min(1, this.turnSecondsLeft / this.secondsPerTurn));
       return this.timerCircumference * (1 - pct);
+    },
+    isSoloBoard() {
+      return !this.isMultiPlayer && ['in_progress', 'complete'].indexOf(this.gameStatus) > -1;
+    },
+    isSoloBoardWide() {
+      return this.isSoloBoard && this.isWideViewport;
+    },
+    forceExpandSections() {
+      return this.isSoloBoardWide;
     }
   },
   methods: {
+    handleResize() {
+      this.isWideViewport = typeof window !== 'undefined' && window.innerWidth >= 1100;
+    },
     playerInitial(name) {
       if (!name) return '?';
       return name.trim().charAt(0).toUpperCase();
