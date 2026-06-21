@@ -456,6 +456,7 @@ export default {
     roomId: null,
     secondsPerTurn: 60,
     turnInterval: null,
+    turnExpiredReported: false,
     turnSecondsLeft: 60.0,
     expiredTurns: 0,
     roomScoreToWin: '3',
@@ -597,8 +598,26 @@ export default {
     backToHome() {
       this.$refs.audioElm.pause();
 
+      if (this.turnInterval) {
+        clearInterval(this.turnInterval);
+        this.turnInterval = null;
+      }
+
+      if (this.roomKey && this.playerId) {
+        this.$cable.unsubscribe({
+          channel: "GameChannel",
+          room_key: this.roomKey,
+          player_id: this.playerId
+        });
+      }
+
+      this.isMultiPlayer = false;
+      this.isRoomHost = false;
+      this.playerId = null;
       this.playerName = '';
       this.roomKey = '';
+      this.roomPlayers = [];
+      this.turnExpiredReported = false;
       this.gameStatus='mode_selection';
     },
     toggleAudio(){
@@ -688,6 +707,7 @@ export default {
 
       this.roomPlayers = data.players;
       this.roomHostName = data.host_player_name;
+      this.isRoomHost = data.host_player_id === this.playerId;
       this.roomMyTurnPlayerId = data.my_turn_player_id;
       this.roomMyTurnPlayerName = data.my_turn_player_name;
       this.expiredTurns = data.expired_turn_count;
@@ -739,6 +759,12 @@ export default {
     },
     questionProcessed(data) {
       this.disableOtherQuestions(data.question_id);
+
+      if (data.answer_val < 1) {
+        this.processing = false;
+        this.setTimerToNext();
+        return;
+      }
 
       const answerIndex = data.answer_val - 1;
       this.message = this.answerValText[answerIndex];
@@ -840,6 +866,14 @@ export default {
       this.guess = {};
     },
     reportTurnExpired() {
+      if (this.turnExpiredReported) return;
+
+      this.turnExpiredReported = true;
+      if (this.turnInterval) {
+        clearInterval(this.turnInterval);
+        this.turnInterval = null;
+      }
+
       this.$cable.perform({
         channel: "GameChannel",
         action: "process_expired_turn",
@@ -864,6 +898,7 @@ export default {
       if(!this.isMultiPlayer) return;
 
       this.turnSecondsLeft = this.secondsPerTurn;
+      this.turnExpiredReported = false;
       if(this.turnInterval) {
         clearInterval(this.turnInterval);
       }
@@ -896,11 +931,15 @@ export default {
       this.headerColor = 'red';
     },
     endGameWithSuccess(data) {
+      clearInterval(this.turnInterval);
+      this.turnInterval = null;
       this.$refs.audioElm.pause();
       this.message = `${data.name} is the right answer!`;
       this.headerColor = this.answerValBgColors[0];
-      const winningPlayer = this.roomPlayers.find(p => p.id == data.my_turn_player_id);
-      winningPlayer.score++;
+      const winningPlayer = this.roomPlayers.find(p => p.id == this.playerId);
+      if (winningPlayer) {
+        winningPlayer.score++;
+      }
       this.processing = false;
     },
     initForNewGame() {

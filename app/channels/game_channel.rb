@@ -4,10 +4,12 @@ class GameChannel < ApplicationCable::Channel
 
   def subscribed
     @room = GameRoom.find_by_key(params[:room_key])
-    
-    return unless @room
 
-    @player = Player.find(params[:player_id])
+    return reject unless @room
+
+    @player = Player.find_by(id: params[:player_id], game_room_id: room.id)
+
+    return reject unless @player
 
     player.is_connected = true
     player.save
@@ -16,21 +18,17 @@ class GameChannel < ApplicationCable::Channel
   end
 
   def unsubscribed
-    if player
-      player.is_connected = false
-      player.save
-    end    
+    return unless player && room
 
-    if room
-      room.process_player_disconnected(player.id)
-    end
+    player.is_connected = false
+    player.save
+    room.process_player_disconnected(player.id)
   end
 
   def report_connected
     room.reload
 
-    room.player_turn_order.push(player.id)
-    room.save
+    room.add_player_to_turn_order(player.id)
 
     data = {
       type: 'game_room_change'
@@ -42,13 +40,16 @@ class GameChannel < ApplicationCable::Channel
   def start_new_game
     return unless player.id == room.host_player_id
 
-    game = PickSubjectGame.create(
+    room.reload
+    room.pick_subject_games.where(status: 'in_progress').update_all(status: 'complete')
+
+    PickSubjectGame.create(
         game_type: room.game_type,
         game_room_id: room.id
     )
 
-    room.player_turn_order = room.player_turn_order.shuffle
-    room.my_turn_player_id = room.player_turn_order[0]
+    room.player_turn_order = room.player_turn_order.uniq.shuffle
+    room.my_turn_player_id = room.player_turn_order.first
     room.save
 
     room.reload
@@ -58,9 +59,12 @@ class GameChannel < ApplicationCable::Channel
 
   def process_question(data)
     room.reload
+    return unless players_turn?
 
     question = Question.find(data["question_id"])
     game = room.current_game
+    return unless game
+
     answer_val = game.process_question(question.id)
 
     unless answer_val == 1
@@ -84,9 +88,12 @@ class GameChannel < ApplicationCable::Channel
 
   def process_guess(data)
     room.reload
+    return unless players_turn?
 
     subject = Subject.find(data["subject_id"])
     game = room.current_game
+    return unless game
+
     answer_val = game.process_guess(subject.id)
 
     if(answer_val == 1) 
@@ -114,10 +121,12 @@ class GameChannel < ApplicationCable::Channel
 
   def process_expired_turn()
     room.reload
+    return unless players_turn?
+
     game = room.current_game
     return unless game
 
-    expired_turns = game.process_expired_turn
+    game.process_expired_turn
     
     unless game.status == 'complete'
       room.increment_my_turn_player_id
@@ -136,6 +145,10 @@ class GameChannel < ApplicationCable::Channel
   end
 
   private
+
+  def players_turn?
+    room.my_turn_player_id == player.id
+  end
 
   def broadcast_room_change
     data = {
