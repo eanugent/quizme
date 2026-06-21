@@ -36,11 +36,19 @@ class GameRoom < ApplicationRecord
         self.save
     end
 
+    def add_player_to_turn_order(player_id)
+        self.player_turn_order = (self.player_turn_order + [player_id]).uniq
+        self.save
+    end
+
     def increment_my_turn_player_id
+        return if self.player_turn_order.empty?
+
         previous_index = self.player_turn_order.index(self.my_turn_player_id)
+        previous_index = -1 if previous_index.nil?
 
         next_index = (previous_index + 1) % self.player_turn_order.count
-        
+
         self.my_turn_player_id = self.player_turn_order[next_index]
 
         self.save
