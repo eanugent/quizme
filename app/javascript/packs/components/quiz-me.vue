@@ -568,6 +568,7 @@ export default {
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize);
     document.body.classList.remove('qm-solo-wide');
+    document.body.classList.remove('qm-projector');
   },
   watch: {
     isSoloBoardWide: {
@@ -575,6 +576,14 @@ export default {
       handler(val) {
         if (typeof document !== 'undefined') {
           document.body.classList.toggle('qm-solo-wide', val);
+        }
+      }
+    },
+    isProjector: {
+      immediate: true,
+      handler(val) {
+        if (typeof document !== 'undefined') {
+          document.body.classList.toggle('qm-projector', val);
         }
       }
     }

@@ -18,11 +18,20 @@
       <div class="hv-stage">
         <div v-if="gameStatus === 'in_progress'" class="hv-turn">
           <div class="hv-timer">
-            <svg viewBox="0 0 120 120">
-              <circle class="hv-timer-track" cx="60" cy="60" r="52"></circle>
+            <svg viewBox="0 0 120 120" width="120" height="120">
               <circle
-                class="hv-timer-progress"
                 cx="60" cy="60" r="52"
+                fill="none"
+                stroke="rgba(255,255,255,0.10)"
+                stroke-width="8"
+              ></circle>
+              <circle
+                cx="60" cy="60" r="52"
+                fill="none"
+                stroke="url(#qm-timer-grad)"
+                stroke-width="8"
+                stroke-linecap="round"
+                transform="rotate(-90 60 60)"
                 :stroke-dasharray="circumference"
                 :stroke-dashoffset="dashOffset"
               ></circle>
@@ -261,16 +270,9 @@ export default {
   flex-direction: column;
 }
 .hv-turn { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1; justify-content: center; }
-.hv-timer { position: relative; width: 132px; height: 132px; }
-.hv-timer svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.hv-timer-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
-.hv-timer-progress {
-  fill: none;
-  stroke: url(#qm-timer-grad);
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.1s linear;
-}
+.hv-timer { position: relative; width: 120px; height: 120px; }
+.hv-timer svg { display: block; width: 120px; height: 120px; }
+.hv-timer svg circle { transition: stroke-dashoffset 0.1s linear; }
 .hv-timer-num {
   position: absolute;
   inset: 0;

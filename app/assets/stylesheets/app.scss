@@ -163,7 +163,8 @@ body { overflow-x: hidden; }
 .qm-main {
   position: relative;
   z-index: 1;
-  padding-top: 24px !important;
+  /* Clear the fixed 68px app bar, then add breathing room. */
+  padding-top: 92px !important;
   padding-bottom: 64px !important;
 }
 
@@ -171,6 +172,11 @@ body { overflow-x: hidden; }
   max-width: 760px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* The projector / host view is meant to fill a shared screen. */
+body.qm-projector .qm-shell {
+  max-width: 1180px;
 }
 
 .qm-toolbar {
@@ -978,7 +984,7 @@ body { overflow-x: hidden; }
    Responsive tweaks
    ============================================================ */
 @media (max-width: 600px) {
-  .qm-main { padding-top: 12px !important; }
+  .qm-main { padding-top: 80px !important; }
   .qm-shell { padding: 0 4px; }
   .qm-status { top: 64px; padding: 14px 16px !important; font-size: 1rem; }
   .qm-card .v-card__title { padding: 20px 22px 6px !important; font-size: 1.3rem !important; }
