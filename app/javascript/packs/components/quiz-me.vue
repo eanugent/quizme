@@ -144,6 +144,10 @@
     <v-card v-if="gameStatus == 'setup_room'" class="qm-card">
       <v-card-title>Set up your room</v-card-title>
       <v-card-text>
+        <div v-if="roomCreateError" class="qm-error-pill">
+          <v-icon small color="#fecaca">mdi-alert-circle-outline</v-icon>
+          {{ roomCreateError }}
+        </div>
         <v-select
           v-if="gameTypes.length > 1"
           v-model="roomGameType"
@@ -507,6 +511,7 @@ export default {
     isMultiPlayer: false,
     roomKey: '',
     roomKeyInvalid: false,
+    roomCreateError: '',
     roomId: null,
     secondsPerTurn: 60,
     turnInterval: null,
@@ -729,6 +734,7 @@ export default {
       });
     },
     setupRoom() {
+      this.roomCreateError = '';
       this.gameStatus = "setup_room";
     },
     startSoloGame() {
@@ -738,6 +744,7 @@ export default {
       this.openRoom();
     },
     startMulti() {
+      this.roomCreateError = '';
       this.isMultiPlayer = true;
       this.isRoomHost = true;
       this.openRoom();
@@ -765,6 +772,12 @@ export default {
             room_key: this.roomKey,
             player_id: this.playerId
           });
+        })
+        .catch(e => {
+          // Don't strand the host on a blank lobby with no explanation.
+          console.error('Failed to create room', e);
+          this.roomCreateError = "Couldn't open the room. Please try again.";
+          this.gameStatus = 'setup_room';
         });
     },
     refreshRoom(data) {
