@@ -52,13 +52,11 @@ class GameChannel < ApplicationCable::Channel
         game_room_id: room.id
     )
 
-    # Rebuild the rotation from currently connected players, excluding the
-    # projecting host. This refreshes the order for each game of the series.
-    turn_players = room.players.select do |p|
-      p.is_connected && !(room.projector_enabled && p.id == room.host_player_id)
-    end
-
-    room.player_turn_order = turn_players.map(&:id).shuffle
+    # player_turn_order is maintained by report_connected / disconnect and
+    # already excludes the projecting host. Re-shuffle it for each game so the
+    # order is fresh every round of the series.
+    room.reload
+    room.player_turn_order = room.player_turn_order.shuffle
     room.my_turn_player_id = room.player_turn_order[0]
     room.save
 
