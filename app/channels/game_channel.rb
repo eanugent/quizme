@@ -29,8 +29,12 @@ class GameChannel < ApplicationCable::Channel
   def report_connected
     room.reload
 
-    room.player_turn_order.push(player.id)
-    room.save
+    # The host is a non-playing MC when projecting, so keep them out of the
+    # turn rotation. Everyone else (and a non-projector host) plays.
+    unless room.projector_enabled && player.id == room.host_player_id
+      room.player_turn_order.push(player.id) unless room.player_turn_order.include?(player.id)
+      room.save
+    end
 
     data = {
       type: 'game_room_change'
@@ -41,13 +45,20 @@ class GameChannel < ApplicationCable::Channel
 
   def start_new_game
     return unless player.id == room.host_player_id
+    return if room.series_status == 'complete'
 
     game = PickSubjectGame.create(
         game_type: room.game_type,
         game_room_id: room.id
     )
 
-    room.player_turn_order = room.player_turn_order.shuffle
+    # Rebuild the rotation from currently connected players, excluding the
+    # projecting host. This refreshes the order for each game of the series.
+    turn_players = room.players.select do |p|
+      p.is_connected && !(room.projector_enabled && p.id == room.host_player_id)
+    end
+
+    room.player_turn_order = turn_players.map(&:id).shuffle
     room.my_turn_player_id = room.player_turn_order[0]
     room.save
 
@@ -77,7 +88,7 @@ class GameChannel < ApplicationCable::Channel
         question_id: question.id,
         my_turn_player_id: room.my_turn_player_id,
         my_turn_player_name: room.my_turn_player_name
-    }
+    }.merge(series_payload(game))
 
     GameChannel.broadcast_to(room, response_data)
   end
@@ -107,7 +118,7 @@ class GameChannel < ApplicationCable::Channel
         correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
         my_turn_player_id: room.my_turn_player_id,
         my_turn_player_name: room.my_turn_player_name
-    }
+    }.merge(series_payload(game))
 
     GameChannel.broadcast_to(room, response_data)
   end
@@ -130,12 +141,19 @@ class GameChannel < ApplicationCable::Channel
       correct_subject_id: game.status == 'complete' ? game.subject_id : -1,
       my_turn_player_id: room.my_turn_player_id,
       my_turn_player_name: room.my_turn_player_name
-    }
-      
-    GameChannel.broadcast_to(room, response_data)    
+    }.merge(series_payload(game))
+
+    GameChannel.broadcast_to(room, response_data)
   end
 
   private
+
+  # When a game finishes, re-evaluate the series and hand every client the
+  # latest standings + whether the series is over.
+  def series_payload(game)
+    room.reload.evaluate_series! if game.status == 'complete'
+    room.reload.series_state_for_json
+  end
 
   def broadcast_room_change
     data = {

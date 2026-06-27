@@ -26,13 +26,13 @@
       </v-btn>
 
       <v-btn
-        v-if="gameStatus == 'complete' && (!isMultiPlayer || isRoomHost)"
+        v-if="gameStatus == 'complete' && !isProjector && (!isMultiPlayer || canStartNextGame)"
         class="qm-btn qm-btn-primary"
         depressed
         @click="startNewGame()"
       >
         <v-icon left>mdi-replay</v-icon>
-        Play Again
+        {{ isMultiPlayer ? nextGameLabel : 'Play Again' }}
       </v-btn>
     </div>
 
@@ -169,6 +169,26 @@
           outlined
           dark
         ></v-text-field>
+        <v-text-field
+          v-model.number="totalGames"
+          label="Number of Games"
+          hint="Best of X — first to a majority wins the series"
+          persistent-hint
+          type="number"
+          min="1"
+          max="99"
+          maxLength="2"
+          outlined
+          dark
+        ></v-text-field>
+        <v-checkbox
+          v-model="projectorEnabled"
+          label="Project a host view"
+          hint="Your screen becomes a shared scoreboard; you host instead of play"
+          persistent-hint
+          dark
+          class="mb-2"
+        ></v-checkbox>
         <v-btn
           class="qm-btn qm-btn-primary qm-btn-block"
           depressed
@@ -254,6 +274,28 @@
     <!-- ============================== Game In Progress / Complete ============================== -->
     <div v-if="['intro', 'mode_selection', 'setup_room', 'waiting_for_players'].indexOf(gameStatus) === -1">
 
+      <!-- Projector / host view -->
+      <host-view
+        v-if="isProjector"
+        :room-key="roomKey"
+        :players="scoreboardPlayers"
+        :game-status="gameStatus"
+        :series-status="seriesStatus"
+        :games-completed="gamesCompleted"
+        :total-games="totalGames"
+        :score-to-win="scoreToWinSeries"
+        :my-turn-player-id="roomMyTurnPlayerId"
+        :my-turn-player-name="roomMyTurnPlayerName"
+        :turn-seconds-left="turnSecondsLeft"
+        :seconds-per-turn="Number(secondsPerTurn)"
+        :questions-left="questionsLeft"
+        :asked-questions="askedQuestions"
+        :message="message"
+        :banner-class="statusClass"
+        @start-next-game="startNewGame()"
+      ></host-view>
+
+      <template v-else>
       <!-- Multiplayer turn indicator -->
       <div
         v-if="isMultiPlayer && ['in_progress', 'complete'].indexOf(gameStatus) > -1"
@@ -436,14 +478,26 @@
           </v-expand-transition>
         </div>
       </v-card>
+      </template>
     </div>
+
+    <!-- ============================== Series Winner Reveal ============================== -->
+    <series-reveal
+      v-if="showReveal"
+      :players="scoreboardPlayers"
+      :winner-player-id="seriesWinnerId"
+      :grand="isProjector"
+    ></series-reveal>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import hostView from "./host-view.vue";
+import seriesReveal from "./series-reveal.vue";
 
 export default {
+  components: { hostView, seriesReveal },
   data: () => ({
     maxQuestions: 10,
     gameTypes: [],
@@ -458,7 +512,16 @@ export default {
     turnInterval: null,
     turnSecondsLeft: 60.0,
     expiredTurns: 0,
-    roomScoreToWin: '3',
+    totalGames: 1,
+    projectorEnabled: false,
+    isProjector: false,
+    roomHostId: null,
+    roomProjectorEnabled: false,
+    seriesStatus: 'in_progress',
+    seriesWinnerId: null,
+    seriesWinnerName: '',
+    gamesCompleted: 0,
+    scoreToWinSeries: 1,
     roomHostName: '',
     isRoomHost: false,
     playerName: '',
@@ -579,6 +642,31 @@ export default {
     },
     forceExpandSections() {
       return this.isSoloBoardWide;
+    },
+    seriesComplete() {
+      return this.isMultiPlayer && this.seriesStatus === 'complete';
+    },
+    scoreboardPlayers() {
+      // Exclude the projecting host (a non-playing MC) from standings.
+      if (this.roomProjectorEnabled && this.roomHostId) {
+        return this.roomPlayers.filter(p => p.id != this.roomHostId);
+      }
+      return this.roomPlayers;
+    },
+    showReveal() {
+      return this.seriesComplete && this.scoreboardPlayers.length > 1;
+    },
+    canStartNextGame() {
+      return this.isRoomHost && this.seriesStatus !== 'complete';
+    },
+    nextGameLabel() {
+      if (this.gamesCompleted === 0) {
+        return this.totalGames > 1 ? `Start Game 1 of ${this.totalGames}` : 'Start Game';
+      }
+      if (this.gamesCompleted >= this.totalGames && this.totalGames > 1) {
+        return 'Start Sudden-Death Game';
+      }
+      return `Start Game ${this.gamesCompleted + 1} of ${this.totalGames}`;
     }
   },
   methods: {
@@ -645,7 +733,8 @@ export default {
     },
     startSoloGame() {
       this.playerName = 'SOLO';
-      this.roomScoreToWin = '0';
+      this.totalGames = 1;
+      this.projectorEnabled = false;
       this.openRoom();
     },
     startMulti() {
@@ -660,7 +749,8 @@ export default {
         {
           game_type: this.roomGameType,
           player_name: this.playerName,
-          score_to_win: this.roomScoreToWin,
+          total_games: this.totalGames,
+          projector_enabled: this.projectorEnabled,
           seconds_per_turn: this.secondsPerTurn
         })
         .then(response => {
@@ -688,9 +778,13 @@ export default {
 
       this.roomPlayers = data.players;
       this.roomHostName = data.host_player_name;
+      this.roomHostId = data.host_player_id;
+      this.roomProjectorEnabled = !!data.projector_enabled;
+      this.isProjector = !!data.projector_enabled && this.playerId == data.host_player_id;
       this.roomMyTurnPlayerId = data.my_turn_player_id;
       this.roomMyTurnPlayerName = data.my_turn_player_name;
       this.expiredTurns = data.expired_turn_count;
+      this.applySeries(data, true);
 
       if(data.game_status) {
         this.gameStatus = data.game_status;
@@ -706,6 +800,22 @@ export default {
 
       if(!this.question_options?.length && data.current_questions?.length){
         this.question_options = data.current_questions;
+      }
+    },
+    applySeries(data, immediate = false) {
+      if (data.total_games != null) this.totalGames = Number(data.total_games);
+      if (data.score_to_win != null) this.scoreToWinSeries = Number(data.score_to_win);
+      if (data.games_completed != null) this.gamesCompleted = Number(data.games_completed);
+      if (data.series_winner_player_id !== undefined) this.seriesWinnerId = data.series_winner_player_id;
+      if (data.series_winner_name !== undefined) this.seriesWinnerName = data.series_winner_name;
+
+      if (data.series_status) {
+        if (data.series_status === 'complete' && !immediate) {
+          // Let the per-game result land before the dramatic series reveal.
+          setTimeout(() => { this.seriesStatus = 'complete'; }, 1800);
+        } else {
+          this.seriesStatus = data.series_status;
+        }
       }
     },
     startNewGame() {
@@ -738,6 +848,7 @@ export default {
       });
     },
     questionProcessed(data) {
+      this.applySeries(data);
       this.disableOtherQuestions(data.question_id);
 
       const answerIndex = data.answer_val - 1;
@@ -801,6 +912,7 @@ export default {
       });
     },
     guessProcessed(data) {
+      this.applySeries(data);
       this.gameStatus = data.game_status;
       this.correctSubjectId = data.correct_subject_id
 
@@ -846,6 +958,7 @@ export default {
       });
     },
     turnExpiredProcessed(data){
+      this.applySeries(data);
       this.gameStatus = data.game_status;
       this.expiredTurns = data.expired_turn_count;
 
