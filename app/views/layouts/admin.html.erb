@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Quiz Me Admin</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= render 'application/favicon' %>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0a1f">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Icons&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vuetify/2.6.5/vuetify.min.css" integrity="sha512-shZs0/Z/LBK8wP4MUyTbTcO21OmJAk7oa3mg+HZU8GzfaEt0TRe82pZFHDJreoBk28BJUyqGggmExZCWUxfVWg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css" />
+    <%= stylesheet_link_tag 'application', media: 'all' %>
+    <%= javascript_pack_tag 'admin' %>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>

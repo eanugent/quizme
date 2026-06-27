@@ -13,6 +13,19 @@ Rails.application.routes.draw do
     post 'games/:id/process_answer', to: 'games#process_answer'    
   end
 
+  namespace :admin do
+    resource :session, only: [:show, :create, :destroy]
+    resources :game_types, only: [:index]
+    resources :subjects, only: [:index, :show, :create, :update] do
+      collection do
+        get :new_template
+      end
+    end
+  end
+
+  get 'admin', to: 'admin#index'
+  get 'admin/*path', to: 'admin#index'
+
   namespace 'pick_subject' do
     resources :games, only: [:index, :show, :create]
     resources :game_rooms, only: [:create, :show]

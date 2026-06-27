@@ -1,44 +1,114 @@
 {
-  "application.js": "/packs/js/application-436658adecbdfe6c8060.js",
-  "application.js.map": "/packs/js/application-436658adecbdfe6c8060.js.map",
-  "components/guess-subject.js": "/packs/js/components/guess-subject-0a4ec5ef81bc5d82ddf4.js",
-  "components/guess-subject.js.map": "/packs/js/components/guess-subject-0a4ec5ef81bc5d82ddf4.js.map",
-  "components/quiz-me.js": "/packs/js/components/quiz-me-2743bf513702cc3cc589.js",
-  "components/quiz-me.js.map": "/packs/js/components/quiz-me-2743bf513702cc3cc589.js.map",
+  "admin-api.js": "/packs/js/admin-api-205f03f5f04b748e24c9.js",
+  "admin-api.js.map": "/packs/js/admin-api-205f03f5f04b748e24c9.js.map",
+  "admin.js": "/packs/js/admin-3d4ff9e4f78bffeb2095.js",
+  "admin.js.map": "/packs/js/admin-3d4ff9e4f78bffeb2095.js.map",
+  "application.js": "/packs/js/application-8c34069c1412d50013b7.js",
+  "application.js.map": "/packs/js/application-8c34069c1412d50013b7.js.map",
+  "components/admin/admin-layout.js": "/packs/js/components/admin/admin-layout-05c5e93697d293297c0f.js",
+  "components/admin/admin-layout.js.map": "/packs/js/components/admin/admin-layout-05c5e93697d293297c0f.js.map",
+  "components/admin/admin-login.js": "/packs/js/components/admin/admin-login-5f39c6e9ac20b80a5519.js",
+  "components/admin/admin-login.js.map": "/packs/js/components/admin/admin-login-5f39c6e9ac20b80a5519.js.map",
+  "components/admin/manage-characters.js": "/packs/js/components/admin/manage-characters-add91302d799bf145260.js",
+  "components/admin/manage-characters.js.map": "/packs/js/components/admin/manage-characters-add91302d799bf145260.js.map",
+  "components/guess-subject.js": "/packs/js/components/guess-subject-2985169c0158cc5e0c6d.js",
+  "components/guess-subject.js.map": "/packs/js/components/guess-subject-2985169c0158cc5e0c6d.js.map",
+  "components/host-view.js": "/packs/js/components/host-view-6ede98de4a691fc5ebb1.js",
+  "components/host-view.js.map": "/packs/js/components/host-view-6ede98de4a691fc5ebb1.js.map",
+  "components/quiz-me.js": "/packs/js/components/quiz-me-e7e937828353cd63c6f3.js",
+  "components/quiz-me.js.map": "/packs/js/components/quiz-me-e7e937828353cd63c6f3.js.map",
+  "components/series-reveal.js": "/packs/js/components/series-reveal-e932c91476375e6985b5.js",
+  "components/series-reveal.js.map": "/packs/js/components/series-reveal-e932c91476375e6985b5.js.map",
   "entrypoints": {
-    "application": {
+    "admin-api": {
       "js": [
-        "/packs/js/application-436658adecbdfe6c8060.js"
+        "/packs/js/admin-api-205f03f5f04b748e24c9.js"
       ],
       "js.map": [
-        "/packs/js/application-436658adecbdfe6c8060.js.map"
+        "/packs/js/admin-api-205f03f5f04b748e24c9.js.map"
+      ]
+    },
+    "admin": {
+      "js": [
+        "/packs/js/admin-3d4ff9e4f78bffeb2095.js"
+      ],
+      "js.map": [
+        "/packs/js/admin-3d4ff9e4f78bffeb2095.js.map"
+      ]
+    },
+    "application": {
+      "js": [
+        "/packs/js/application-8c34069c1412d50013b7.js"
+      ],
+      "js.map": [
+        "/packs/js/application-8c34069c1412d50013b7.js.map"
+      ]
+    },
+    "components/admin/admin-layout": {
+      "js": [
+        "/packs/js/components/admin/admin-layout-05c5e93697d293297c0f.js"
+      ],
+      "js.map": [
+        "/packs/js/components/admin/admin-layout-05c5e93697d293297c0f.js.map"
+      ]
+    },
+    "components/admin/admin-login": {
+      "js": [
+        "/packs/js/components/admin/admin-login-5f39c6e9ac20b80a5519.js"
+      ],
+      "js.map": [
+        "/packs/js/components/admin/admin-login-5f39c6e9ac20b80a5519.js.map"
+      ]
+    },
+    "components/admin/manage-characters": {
+      "js": [
+        "/packs/js/components/admin/manage-characters-add91302d799bf145260.js"
+      ],
+      "js.map": [
+        "/packs/js/components/admin/manage-characters-add91302d799bf145260.js.map"
       ]
     },
     "components/guess-subject": {
       "js": [
-        "/packs/js/components/guess-subject-0a4ec5ef81bc5d82ddf4.js"
+        "/packs/js/components/guess-subject-2985169c0158cc5e0c6d.js"
       ],
       "js.map": [
-        "/packs/js/components/guess-subject-0a4ec5ef81bc5d82ddf4.js.map"
+        "/packs/js/components/guess-subject-2985169c0158cc5e0c6d.js.map"
+      ]
+    },
+    "components/host-view": {
+      "js": [
+        "/packs/js/components/host-view-6ede98de4a691fc5ebb1.js"
+      ],
+      "js.map": [
+        "/packs/js/components/host-view-6ede98de4a691fc5ebb1.js.map"
       ]
     },
     "components/quiz-me": {
       "js": [
-        "/packs/js/components/quiz-me-2743bf513702cc3cc589.js"
+        "/packs/js/components/quiz-me-e7e937828353cd63c6f3.js"
       ],
       "js.map": [
-        "/packs/js/components/quiz-me-2743bf513702cc3cc589.js.map"
+        "/packs/js/components/quiz-me-e7e937828353cd63c6f3.js.map"
+      ]
+    },
+    "components/series-reveal": {
+      "js": [
+        "/packs/js/components/series-reveal-e932c91476375e6985b5.js"
+      ],
+      "js.map": [
+        "/packs/js/components/series-reveal-e932c91476375e6985b5.js.map"
       ]
     },
     "main": {
       "js": [
-        "/packs/js/main-67ab41062c79bad3c1dd.js"
+        "/packs/js/main-ff8cb66f6dd3c3881d56.js"
       ],
       "js.map": [
-        "/packs/js/main-67ab41062c79bad3c1dd.js.map"
+        "/packs/js/main-ff8cb66f6dd3c3881d56.js.map"
       ]
     }
   },
-  "main.js": "/packs/js/main-67ab41062c79bad3c1dd.js",
-  "main.js.map": "/packs/js/main-67ab41062c79bad3c1dd.js.map"
+  "main.js": "/packs/js/main-ff8cb66f6dd3c3881d56.js",
+  "main.js.map": "/packs/js/main-ff8cb66f6dd3c3881d56.js.map"
 }

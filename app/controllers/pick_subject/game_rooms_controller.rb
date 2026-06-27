@@ -15,10 +15,14 @@ module PickSubject
             #room_key = [*0..9, *'A'..'Z'].shuffle[0..3].join
             room_key = [*0..9].shuffle[0..3].join
 
+            total_games = total_games_param
+
             new_room = GameRoom.create(
                 room_key: room_key,
                 game_type: game_type_param,
-                score_to_win: score_to_win_param,
+                total_games: total_games,
+                score_to_win: (total_games / 2) + 1,
+                projector_enabled: projector_enabled_param,
                 seconds_per_turn: seconds_per_turn_param,
                 is_open: true
             )
@@ -87,8 +91,12 @@ module PickSubject
             params.require(:game_type)
         end
 
-        def score_to_win_param
-            params.require(:score_to_win)
+        def total_games_param
+            (params[:total_games].presence || 1).to_i.clamp(1, 99)
+        end
+
+        def projector_enabled_param
+            ActiveModel::Type::Boolean.new.cast(params[:projector_enabled]) || false
         end
 
         def seconds_per_turn_param
