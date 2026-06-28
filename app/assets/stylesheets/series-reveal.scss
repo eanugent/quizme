@@ -1,0 +1,178 @@
+/* Series winner reveal (Kahoot-style) styles.
+   Kept global (not Vue-scoped) for the same reason as host-view.scss. */
+.sr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(124, 58, 237, 0.45), transparent 60%),
+    radial-gradient(circle at 50% 90%, rgba(236, 72, 153, 0.30), transparent 55%),
+    rgba(7, 6, 26, 0.96);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+  animation: sr-overlay-in 0.4s ease both;
+}
+@keyframes sr-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Suspense */
+.sr-suspense { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.sr-suspense-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  color: var(--qm-text);
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  letter-spacing: 0.01em;
+  animation: sr-pulse 1.1s ease-in-out infinite;
+}
+@keyframes sr-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+.sr-drumroll { display: flex; gap: 14px; }
+.sr-drumroll span {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--qm-gold);
+  animation: sr-bounce 0.7s ease-in-out infinite;
+}
+.sr-drumroll span:nth-child(2) { animation-delay: 0.15s; background: var(--qm-pink); }
+.sr-drumroll span:nth-child(3) { animation-delay: 0.3s; background: var(--qm-violet-2); }
+@keyframes sr-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-18px); opacity: 1; }
+}
+
+/* Reveal */
+.sr-reveal { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 720px; }
+.sr-crown { font-size: clamp(3rem, 9vw, 5rem); animation: sr-crown 2.2s ease-in-out infinite; }
+@keyframes sr-crown {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-10px) rotate(4deg); }
+}
+.sr-winner-label {
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.8rem;
+  color: var(--qm-gold-soft);
+  margin-top: 6px;
+}
+.sr-winner-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 9vw, 5rem);
+  line-height: 1.05;
+  margin: 6px 0 2px;
+  background: linear-gradient(120deg, #fde68a, #facc15, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 8px 40px rgba(250, 204, 21, 0.35);
+  animation: sr-name-in 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes sr-name-in {
+  from { opacity: 0; transform: scale(0.6) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.sr-winner-sub { color: var(--qm-text-dim); font-size: 1rem; margin-bottom: 26px; }
+
+/* Podium */
+.sr-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 28px);
+  width: 100%;
+}
+.sr-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 1 120px;
+  animation: sr-rise 0.6s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+@keyframes sr-rise {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sr-pillar-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 1.2rem;
+  color: #1a1430;
+  background: linear-gradient(135deg, var(--qm-gold-soft), var(--qm-gold));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  margin-bottom: 8px;
+}
+.sr-pillar-name {
+  color: var(--qm-text);
+  font-weight: 600;
+  font-size: 0.92rem;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+.sr-pillar-block {
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  background: var(--qm-glass-strong);
+  border: 1px solid var(--qm-border-strong);
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 12px 8px 10px;
+}
+.sr-pillar-medal { font-size: 1.5rem; }
+.sr-pillar-score { color: var(--qm-gold); font-weight: 700; font-size: 1.3rem; }
+.sr-rank-1 .sr-pillar-block { height: 150px; background: linear-gradient(180deg, rgba(250,204,21,0.22), var(--qm-glass-strong)); }
+.sr-rank-2 .sr-pillar-block { height: 110px; }
+.sr-rank-3 .sr-pillar-block { height: 84px; }
+.sr-pillar-win .sr-pillar-avatar {
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.4), 0 6px 18px rgba(0,0,0,0.35);
+  animation: sr-glow 1.6s ease-in-out infinite;
+}
+@keyframes sr-glow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(250,204,21,0.4), 0 6px 18px rgba(0,0,0,0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(250,204,21,0.15), 0 6px 28px rgba(250,204,21,0.5); }
+}
+
+/* Confetti */
+.sr-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.sr-confetti-piece {
+  position: absolute;
+  top: -24px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation-name: sr-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+}
+@keyframes sr-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
+
+/* Grand (projector) sizing */
+.sr-grand .sr-winner-name { font-size: clamp(4rem, 11vw, 8rem); }
+.sr-grand .sr-crown { font-size: clamp(5rem, 11vw, 8rem); }
+.sr-grand .sr-pillar { flex-basis: 180px; }
+.sr-grand .sr-pillar-avatar { width: 76px; height: 76px; font-size: 1.7rem; }
+.sr-grand .sr-rank-1 .sr-pillar-block { height: 220px; }
+.sr-grand .sr-rank-2 .sr-pillar-block { height: 160px; }
+.sr-grand .sr-rank-3 .sr-pillar-block { height: 120px; }
+
+/* Transitions */
+.sr-fade-enter-active, .sr-fade-leave-active { transition: opacity 0.4s ease; }
+.sr-fade-enter, .sr-fade-leave-to { opacity: 0; }
+.sr-pop-enter-active { transition: all 0.5s cubic-bezier(0.2, 1.3, 0.3, 1); }
+.sr-pop-enter { opacity: 0; transform: scale(0.85); }
