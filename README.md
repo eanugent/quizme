@@ -53,34 +53,22 @@ bin/rails test
 
 Seed data lives in `lib/seeds/questions.csv`. Each row is a question; columns prefixed with `_` are Bible characters, with answer values `1` (yes), `2` (no), or `3` (not sure). Re-running `bin/rails db:seed` replaces data per game type found in the CSV.
 
-## Deployment (Heroku)
+## Deployment (GitHub Actions to Heroku)
 
-Production deploys by pushing to the Heroku Git remote:
+The [CI/CD workflow](.github/workflows/ci-cd.yml) runs the Rails test suite and compiles production assets for pull requests and pushes to `main`. A successful `main` build deploys the same commit to Heroku automatically. A failed test or asset build blocks deployment.
 
-```bash
-git push heroku main
-```
+Configure these repository secrets under **Settings → Secrets and variables → Actions**:
 
-Heroku app remote:
+| Secret | Value |
+|--------|-------|
+| `HEROKU_API_KEY` | A Heroku API key for an account with deploy access |
+| `HEROKU_APP_NAME` | `quizme-bible` |
 
-```text
-https://git.heroku.com/quizme-bible.git
-```
+The deployment job uses the GitHub `production` environment, so optional approval rules can be configured under **Settings → Environments → production**. The workflow can also be run manually from the repository's **Actions** tab.
 
-If the Heroku remote is not configured yet:
+The Heroku `release` process in `Procfile` runs `rails db:migrate` on each deployment. Run `heroku run rails db:seed --app quizme-bible` separately only when question data should be refreshed.
 
-```bash
-git remote add heroku https://git.heroku.com/quizme-bible.git
-```
-
-After the first deploy (or when migrations change), run on Heroku:
-
-```bash
-heroku run rails db:migrate
-heroku run rails db:seed   # when question data should be refreshed
-```
-
-Heroku provides `DATABASE_URL` for PostgreSQL. Ensure `RAILS_MASTER_KEY` is set in Heroku config if you rely on encrypted credentials. Assets are precompiled during the build (`rails assets:precompile` / Webpacker production compile).
+Heroku provides `DATABASE_URL` for PostgreSQL. Ensure `RAILS_MASTER_KEY` is set in Heroku config if you rely on encrypted credentials. Assets are precompiled during the Heroku build (`rails assets:precompile` / Webpacker production compile).
 
 Multiplayer uses Action Cable; production is configured to use the PostgreSQL adapter for Cable (`config/cable.yml`).
 
