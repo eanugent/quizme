@@ -62,4 +62,17 @@ class GameRoomTest < ActiveSupport::TestCase
 
     assert_equal "in_progress", room.series_status
   end
+
+  test "preparing a completed room for replay resets series and scores" do
+    room, players = build_room(scores: [1], score_to_win: 1, total_games: 1, completed_games: 1)
+    room.update!(series_status: "complete", series_winner_player_id: players.first.id)
+
+    room.prepare_for_replay!
+
+    assert_equal "in_progress", room.series_status
+    assert_nil room.series_winner_player_id
+    assert_equal 0, players.first.reload.score
+    assert_equal 2, room.total_games
+    assert_equal 1, room.score_to_win
+  end
 end
