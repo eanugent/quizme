@@ -841,11 +841,19 @@ export default {
       }
     },
     startNewGame() {
-      this.$refs.currentTime = 0;
+      if (this.$refs.audioElm) {
+        this.$refs.audioElm.pause();
+        this.$refs.audioElm.currentTime = 0;
+      }
 
       this.$cable.perform({
         channel: "GameChannel",
-        action: "start_new_game"
+        action: "start_new_game",
+        data: {
+          // A solo game is a one-game series, so completing it closes the
+          // room. Tell the server that Play Again should reopen that series.
+          restart_series: !this.isMultiPlayer && this.gameStatus === 'complete'
+        }
       });
     },
     selectQuestion(index) {
@@ -1039,16 +1047,27 @@ export default {
       this.processing = false;
     },
     initForNewGame() {
+      if(this.turnInterval) {
+        clearInterval(this.turnInterval);
+        this.turnInterval = null;
+      }
+
       if(this.$refs.audioElm.paused){
         this.$refs.audioElm.currentTime = 0;
       }
 
       this.message = '';
       this.headerColor = 'white';
+      this.question_options = [];
+      this.showSubjects = false;
+      this.showAskedQuestions = false;
       this.askedQuestions = [];
       this.guessedSubjectIds = [];
       this.correctSubjectId = -1;
       this.expiredTurns = 0;
+      this.turnSecondsLeft = this.secondsPerTurn;
+      this.processing = false;
+      this.guess = {};
     }
   }
 };

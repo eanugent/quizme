@@ -43,9 +43,21 @@ class GameChannel < ApplicationCable::Channel
     GameChannel.broadcast_to(room, data)
   end
 
-  def start_new_game
-    return unless player.id == room.host_player_id
-    return if room.series_status == 'complete'
+  def start_new_game(_data = {})
+    room.reload
+    solo_replay = solo_replay_authorized?
+
+    # In normal multiplayer play only the host may advance the series. A solo
+    # room has exactly one player, though, so that player is also authoritative
+    # if the cached/maintained host id has gone stale during the completed-game
+    # lifecycle.
+    return unless player.id == room.host_player_id || solo_replay
+
+    if room.series_status == 'complete'
+      return unless solo_replay
+
+      room.prepare_for_replay!
+    end
 
     game = PickSubjectGame.create(
         game_type: room.game_type,
@@ -145,6 +157,13 @@ class GameChannel < ApplicationCable::Channel
   end
 
   private
+
+  def solo_replay_authorized?
+    room.series_status == 'complete' &&
+      !room.projector_enabled &&
+      room.players.where(id: player.id).exists? &&
+      room.players.count == 1
+  end
 
   # When a game finishes, re-evaluate the series and hand every client the
   # latest standings + whether the series is over.

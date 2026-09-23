@@ -64,6 +64,23 @@ class GameRoom < ApplicationRecord
         end
     end
 
+    # Solo Play Again reuses the room and its cable subscription. Keep the
+    # completed games as history, but make the next game the new end of this
+    # one-game series and clear all score/series state.
+    def prepare_for_replay!
+        completed_count = games_completed
+
+        transaction do
+            players.update_all(score: 0)
+            update!(
+                total_games: completed_count + 1,
+                score_to_win: 1,
+                series_status: 'in_progress',
+                series_winner_player_id: nil
+            )
+        end
+    end
+
     def series_winner_name
         Player.where(id: series_winner_player_id).first&.name
     end
